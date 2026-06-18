@@ -1,0 +1,15 @@
+{
+  "name": "Tul - Dá — Experiencias curadas Mérida → Tulum",
+  "short_name": "Tul - Dá",
+  "description": "Experiencias de viaje curadas de lujo por Guru Davar. Mérida → Tulum.",
+  "lang": "es",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0A0A0A",
+  "theme_color": "#0A0A0A",
+  "icons": [
+    { "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "assets/logo/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }
+  ]
+}

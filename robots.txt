@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://oscarfca.github.io/tul-da/sitemap.xml
