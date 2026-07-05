@@ -337,6 +337,54 @@ a { color: inherit; text-decoration: none; }
   .hero__video { display: none; }
 }
 
+/* ═══ WhatsApp flotante ════════════════════════════════════ */
+.wa-fab { position: fixed; right: clamp(16px,3vw,28px); bottom: clamp(16px,3vw,28px); z-index: 900;
+  width: 56px; height: 56px; display: grid; place-items: center; border-radius: 50%;
+  background: var(--deep-night); border: 1px solid var(--gold); color: var(--gold);
+  box-shadow: 0 8px 28px rgba(0,0,0,.5); transition: transform .25s var(--ease), background .25s, color .25s;
+  animation: waIn .4s var(--ease) .8s both; }
+.wa-fab:hover { background: var(--gold); color: var(--obsidian); transform: translateY(-3px) scale(1.06); }
+@keyframes waIn { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) { .wa-fab { animation: none; } }
+
+/* ═══ CUENTA REGRESIVA (próxima salida) ════════════════════ */
+.countdown { position: relative; margin-top: clamp(28px,4vh,44px); padding: clamp(28px,4vw,44px); text-align: center;
+  border: 1px solid var(--line); border-radius: 6px; background: radial-gradient(120% 140% at 50% 0%, rgba(201,151,58,.06), transparent 60%), rgba(255,255,255,.015); overflow: hidden; }
+.cd__state { color: var(--text-mute); font-size: 14px; padding: 20px 0; }
+.cd__top { display: flex; flex-direction: column; gap: 4px; margin-bottom: 22px; }
+.cd__route { font-size: 11px; letter-spacing: .22em; text-transform: uppercase; color: var(--gold); }
+.cd__date { font-family: var(--font-display); font-size: clamp(22px,3vw,30px); color: #F4EEE0; }
+.cd__clock { display: flex; align-items: center; justify-content: center; gap: clamp(6px,1.4vw,16px); margin-bottom: 22px; }
+.cd__unit { display: flex; flex-direction: column; align-items: center; min-width: clamp(52px,8vw,74px); }
+.cd__unit b { font-family: var(--font-display); font-weight: 600; font-size: clamp(38px,6vw,60px); line-height: 1; color: var(--pale-gold); font-variant-numeric: tabular-nums; }
+.cd__unit i { margin-top: 8px; font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: var(--text-mute); font-style: normal; }
+.cd__sep { font-family: var(--font-display); font-size: clamp(30px,5vw,48px); color: var(--text-faint); align-self: flex-start; margin-top: clamp(2px,.5vw,6px); }
+.cd__spots { display: inline-flex; align-items: center; gap: 9px; padding: 9px 20px; border-radius: 100px; font-size: 13px; letter-spacing: .04em;
+  border: 1px solid var(--line); color: var(--pale-gold); margin-bottom: 22px; transition: all .3s ease; }
+.cd__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 0 0 rgba(201,151,58,.6); }
+.cd__spots.is-low { border-color: rgba(232,163,80,.5); color: #E8A350; }
+.cd__spots.is-low .cd__dot { background: #E8A350; animation: cdPulse 1.8s infinite; }
+.cd__spots.is-critical { border-color: rgba(214,90,74,.6); color: #E4756A; background: rgba(214,90,74,.08); animation: cdShake 2.6s ease-in-out infinite; }
+.cd__spots.is-critical .cd__dot { background: #D65A4A; box-shadow: 0 0 0 0 rgba(214,90,74,.7); animation: cdPulse .9s infinite; }
+@keyframes cdPulse { 0% { box-shadow: 0 0 0 0 currentColor; opacity: 1; } 70% { box-shadow: 0 0 0 8px transparent; opacity: .7; } 100% { box-shadow: 0 0 0 0 transparent; opacity: 1; } }
+@keyframes cdShake { 0%,92%,100% { transform: translateX(0); } 94% { transform: translateX(-2px); } 96% { transform: translateX(2px); } 98% { transform: translateX(-1px); } }
+.cd__cta { display: block; margin: 0 auto; }
+/* SOLD OUT overlay */
+.cd__soldout { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(8,8,8,.9); z-index: 4; }
+.cd__soldout span { font-family: var(--font-display); font-weight: 700; font-size: clamp(40px,8vw,84px); letter-spacing: .06em; color: #D65A4A;
+  border: 3px solid #D65A4A; padding: 10px 30px; border-radius: 6px; transform: rotate(-9deg) scale(0); opacity: 0; animation: cdStamp .6s cubic-bezier(.2,1.4,.4,1) forwards; text-transform: uppercase; }
+@keyframes cdStamp { 0% { transform: rotate(-9deg) scale(2.4); opacity: 0; } 60% { opacity: 1; } 100% { transform: rotate(-9deg) scale(1); opacity: 1; } }
+.countdown.is-sellingout .cd__clock, .countdown.is-sellingout .cd__cta, .countdown.is-sellingout .cd__spots { filter: blur(2px); opacity: .4; }
+/* Sin fechas */
+.cd__none { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 12px 0; }
+.cd__none-icon { font-size: 26px; color: var(--gold); }
+.cd__none-t { font-family: var(--font-display); font-size: clamp(22px,3vw,28px); color: #F4EEE0; margin: 0; }
+.cd__none-b { font-size: 14px; color: var(--text-soft); max-width: 46ch; margin: 0 0 6px; line-height: 1.6; }
+@media (prefers-reduced-motion: reduce) {
+  .cd__spots.is-critical, .cd__dot, .cd__soldout span { animation: none !important; }
+  .cd__soldout span { transform: rotate(-9deg) scale(1); opacity: 1; }
+}
+
 /* ═══ FAQ (acordeón) ═══════════════════════════════════════ */
 .faq { margin-top: clamp(36px,5vh,52px); }
 .faq__item { border-bottom: 1px solid var(--line-soft); }

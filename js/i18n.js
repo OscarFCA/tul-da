@@ -59,6 +59,7 @@
     proc_3_t: 'Show up', proc_3_b: 'Arrive in Mérida. We handle the rest.',
     proc_note: '* Prices subject to season. Limited spots per departure.',
 
+    cd_eyebrow: 'Next departure',
     fechas_eyebrow: 'Upcoming departures',
     fechas_h2: 'When is <em>yours?</em>',
     dates_col_fecha: 'Date', dates_col_pkg: 'Packages', dates_col_spots: 'Spots',
