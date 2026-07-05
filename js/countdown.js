@@ -20,6 +20,7 @@
       last: function (n) { return '¡Últimos ' + n + '! Casi lleno'; },
       almost: function (n) { return n === 1 ? '¡Último lugar!' : '¡Solo ' + n + ' lugares!'; },
       reserve: 'Reservar mi lugar',
+      mini_label: 'Próxima salida', mini_reserve: 'Reservar',
       soldout: 'AGOTADO',
       soldout_msg: 'Esta salida se llenó. Siguiente fecha:',
       none_t: 'Muy pronto, nuevas fechas',
@@ -34,6 +35,7 @@
       last: function (n) { return 'Only ' + n + ' left! Almost full'; },
       almost: function (n) { return n === 1 ? 'Last spot!' : 'Only ' + n + ' spots!'; },
       reserve: 'Reserve my spot',
+      mini_label: 'Next departure', mini_reserve: 'Reserve',
       soldout: 'SOLD OUT',
       soldout_msg: 'This departure filled up. Next date:',
       none_t: 'New dates coming very soon',
@@ -60,6 +62,36 @@
   var tick = null;
   var poll = null;
   var animating = false;
+
+  // Mini contador flotante (izquierda): aparece al bajar del contador principal.
+  var mini = document.createElement('div');
+  mini.className = 'cd-mini';
+  document.body.appendChild(mini);
+  var proximaSec = null;
+  function onScroll() {
+    if (!proximaSec) proximaSec = document.getElementById('proxima');
+    var r = proximaSec ? proximaSec.getBoundingClientRect() : { bottom: 9999 };
+    var show = cur && !animating && r.bottom < 80; // visible cuando el principal ya pasó arriba
+    mini.classList.toggle('is-shown', !!show);
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+
+  function renderMini() {
+    if (!cur) { mini.classList.remove('is-shown'); return; }
+    var t = STR[lang()], u = urgency(cur.spotsLeft);
+    var pkg = (cur.packageNames && cur.packageNames[0]) || '';
+    mini.innerHTML =
+      '<span class="cd-mini__label">' + esc(t.mini_label) + '</span>' +
+      '<span class="cd-mini__date">' + esc(fmtDate(cur.date)) + '</span>' +
+      '<span class="cd-mini__time" id="cdMiniTime">—</span>' +
+      '<span class="cd-mini__spots ' + u.cls + '"><span class="cd__dot"></span>' + esc(u.txt) + '</span>' +
+      '<button type="button" class="cd-mini__cta">' + esc(t.mini_reserve) + '</button>';
+    mini.querySelector('.cd-mini__cta').addEventListener('click', function () {
+      if (window.TuldaReserve) window.TuldaReserve.open({ package: pkg, dateId: cur.id });
+    });
+    updateClock(); // pinta el tiempo del mini de inmediato
+    onScroll();
+  }
 
   function upcoming(dates) {
     var now = new Date();
@@ -92,7 +124,9 @@
     if (!cur) { renderNone(); return; }
     var t = STR[lang()], u = urgency(cur.spotsLeft);
     var pkg = (cur.packageNames && cur.packageNames[0]) || '';
-    root.className = 'countdown reveal is-active';
+    // Usar classList (NO sobrescribir className) para preservar .reveal/.visible.
+    root.classList.remove('is-none', 'is-sellingout');
+    root.classList.add('is-active');
     root.innerHTML =
       '<div class="cd__top">' +
         '<span class="cd__route">' + esc(t.route) + '</span>' +
@@ -112,12 +146,15 @@
       if (window.TuldaReserve) window.TuldaReserve.open({ package: pkg, dateId: cur.id });
     });
     startTick();
+    renderMini();
   }
 
   function renderNone() {
     clearInterval(tick);
+    mini.classList.remove('is-shown');
     var t = STR[lang()];
-    root.className = 'countdown reveal is-none';
+    root.classList.remove('is-active', 'is-sellingout');
+    root.classList.add('is-none');
     root.innerHTML =
       '<div class="cd__none">' +
         '<span class="cd__none-icon">✦</span>' +
@@ -140,11 +177,14 @@
     var s = Math.floor(diff / 1000);
     var vals = [Math.floor(s / 86400), Math.floor((s % 86400) / 3600), Math.floor((s % 3600) / 60), s % 60];
     var clock = document.getElementById('cdClock');
-    if (!clock) return;
-    clock.querySelectorAll('[data-u]').forEach(function (el, i) {
-      var v = two(vals[i]);
-      if (el.textContent !== v) el.textContent = v;
-    });
+    if (clock) {
+      clock.querySelectorAll('[data-u]').forEach(function (el, i) {
+        var v = two(vals[i]);
+        if (el.textContent !== v) el.textContent = v;
+      });
+    }
+    var miniT = document.getElementById('cdMiniTime');
+    if (miniT) miniT.textContent = vals[0] + 'd ' + two(vals[1]) + ':' + two(vals[2]) + ':' + two(vals[3]);
   }
 
   // Poll en tiempo real: si la fecha actual se agota → animación SOLD OUT → siguiente.
@@ -161,8 +201,11 @@
         playSoldOut(next);
       } else if (same.spotsLeft !== cur.spotsLeft) {
         cur.spotsLeft = same.spotsLeft; // actualizar urgencia sin reiniciar reloj
+        var u = urgency(cur.spotsLeft);
         var box = root.querySelector('.cd__spots');
-        if (box) { var u = urgency(cur.spotsLeft); box.className = 'cd__spots ' + u.cls; box.innerHTML = '<span class="cd__dot"></span>' + esc(u.txt); }
+        if (box) { box.className = 'cd__spots ' + u.cls; box.innerHTML = '<span class="cd__dot"></span>' + esc(u.txt); }
+        var mbox = mini.querySelector('.cd-mini__spots');
+        if (mbox) { mbox.className = 'cd-mini__spots ' + u.cls; mbox.innerHTML = '<span class="cd__dot"></span>' + esc(u.txt); }
       }
     }).catch(function () {});
   }
