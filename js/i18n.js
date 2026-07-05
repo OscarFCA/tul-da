@@ -78,7 +78,26 @@
     footer_note: '* Prices subject to season. Limited spots per departure.',
     footer_copy: '© 2026 Tul - Dá. All rights reserved.',
     footer_terms: 'Terms & conditions',
-    footer_privacy: 'Privacy'
+    footer_privacy: 'Privacy',
+
+    faq_eyebrow: 'Before you book',
+    faq_h2: 'Frequently <em>asked.</em>',
+    faq_q1: 'What does my package include?',
+    faq_a1: '<p>Round transport Mérida–Tulum, internal transport throughout the experience, lodging, entry to the itinerary’s events and the activities listed in your package. Meals are not included, except the welcome lunch.</p>',
+    faq_q2: 'Can I cancel my spot?',
+    faq_a2: '<p>Tul-Da is an experience curated for a specific group — every reserved spot is part of logistics planned down to the detail. For that reason, we don’t handle cancellations or refunds by personal choice.</p><p>If something outside your control happens — a real emergency, force majeure — we’ll talk. In those cases, your spot transfers to the next available date. Every situation is reviewed personally.</p>',
+    faq_q3: 'Can I change my date?',
+    faq_a3: '<p>Changing your date is available only when your date’s group is full (20 people). If the group isn’t full yet, changes aren’t possible — because every spot affects the viability of the trip for everyone.</p><p>If your date is already full and you need to move your spot, message us on WhatsApp and we’ll handle it together.</p>',
+    faq_q4: 'Can I transfer my spot to someone else?',
+    faq_a4: '<p>Yes. If you can’t make it, you can pass your spot to someone else. The new person joins under exactly the same conditions as your reservation.</p><p>The transfer has a cost of 10% of your package value — this covers the administrative handling of the change. Once the fee payment is confirmed, the spot is placed under the new holder’s name.</p>',
+    faq_q5: 'How many spots are there per date?',
+    faq_a5: '<p>Each date has exactly 20 spots. When 5 or fewer remain, you’ll see an alert on the page. When they sell out, the date closes automatically.</p>',
+    faq_q6: 'Do prices include tax (IVA)?',
+    faq_a6: '<p>No. The prices shown are before tax. The total with tax is shown in the summary before you confirm your payment.</p>',
+    faq_q7: 'Can I pay in dollars or euros?',
+    faq_a7: '<p>Yes. We accept MXN, USD and EUR through Stripe. The exchange rate is applied at the time of payment.</p>',
+    faq_q8: 'Do you offer add-on activities?',
+    faq_a8: '<p>Yes. Depending on the season and availability, we offer yachts, exclusive restaurants, private chef, local experiences and more. Ask us on WhatsApp — we’ll tell you what’s available for your date.</p>'
   };
 
   var META = {

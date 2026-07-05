@@ -46,7 +46,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="css/styles.css?v=3">
+<link rel="stylesheet" href="css/styles.css?v=4">
 
 <!-- ===== Datos estructurados (JSON-LD) ===== -->
 <script type="application/ld+json">
@@ -337,6 +337,57 @@
   </div>
 </section>
 
+<!-- ░░░░░ S8 · FAQ ░░░░░ -->
+<section id="faq" class="section" aria-labelledby="faq-h">
+  <div class="container container--narrow">
+    <span class="eyebrow reveal" data-t="faq_eyebrow">Antes de reservar</span>
+    <h2 id="faq-h" class="display reveal" data-t="faq_h2">Preguntas <em>frecuentes.</em></h2>
+    <div class="faq reveal">
+
+      <details class="faq__item">
+        <summary class="faq__q" data-t="faq_q1">¿Qué incluye mi paquete?</summary>
+        <div class="faq__a" data-t="faq_a1"><p>Transporte redondo Mérida–Tulum, transporte interno durante toda la experiencia, hospedaje, entradas a los eventos del itinerario y las actividades indicadas en tu paquete. Las comidas no están incluidas, salvo la comida de bienvenida.</p></div>
+      </details>
+
+      <details class="faq__item">
+        <summary class="faq__q" data-t="faq_q2">¿Puedo cancelar mi lugar?</summary>
+        <div class="faq__a" data-t="faq_a2"><p>Tul-Da es una experiencia curada para un grupo específico — cada lugar que se reserva forma parte de una logística pensada al detalle. Por eso, no manejamos cancelaciones ni devoluciones por decisión personal.</p><p>Si ocurre algo fuera de tu control — una emergencia real, fuerza mayor — conversamos. En esos casos, tu lugar se transfiere a la siguiente fecha disponible. Cada situación se revisa de forma personal.</p></div>
+      </details>
+
+      <details class="faq__item">
+        <summary class="faq__q" data-t="faq_q3">¿Puedo cambiar de fecha?</summary>
+        <div class="faq__a" data-t="faq_a3"><p>El cambio de fecha está disponible únicamente cuando el grupo de tu fecha está completo (20 personas). Si el grupo aún no está lleno, no es posible hacer cambios — porque cada lugar afecta la viabilidad del viaje para todos.</p><p>Si tu fecha ya está completa y necesitas mover tu lugar, escríbenos por WhatsApp y lo gestionamos juntos.</p></div>
+      </details>
+
+      <details class="faq__item">
+        <summary class="faq__q" data-t="faq_q4">¿Puedo transferir mi lugar a otra persona?</summary>
+        <div class="faq__a" data-t="faq_a4"><p>Sí. Si no puedes ir, puedes ceder tu lugar a alguien más. La persona nueva entra con exactamente las mismas condiciones de tu reservación.</p><p>El traspaso tiene un costo del 10% del valor de tu paquete — esto cubre la gestión administrativa del cambio. Una vez confirmado el pago del fee, el lugar queda a nombre del nuevo titular.</p></div>
+      </details>
+
+      <details class="faq__item">
+        <summary class="faq__q" data-t="faq_q5">¿Cuántos lugares hay por fecha?</summary>
+        <div class="faq__a" data-t="faq_a5"><p>Cada fecha tiene exactamente 20 lugares. Cuando quedan 5 o menos, verás una alerta en la página. Cuando se agotan, la fecha se cierra automáticamente.</p></div>
+      </details>
+
+      <details class="faq__item">
+        <summary class="faq__q" data-t="faq_q6">¿Los precios incluyen IVA?</summary>
+        <div class="faq__a" data-t="faq_a6"><p>No. Los precios mostrados son antes de IVA. El total con IVA se muestra en el resumen antes de confirmar tu pago.</p></div>
+      </details>
+
+      <details class="faq__item">
+        <summary class="faq__q" data-t="faq_q7">¿Puedo pagar en dólares o euros?</summary>
+        <div class="faq__a" data-t="faq_a7"><p>Sí. Aceptamos MXN, USD y EUR a través de Stripe. El tipo de cambio se aplica al momento del pago.</p></div>
+      </details>
+
+      <details class="faq__item">
+        <summary class="faq__q" data-t="faq_q8">¿Tienen actividades adicionales?</summary>
+        <div class="faq__a" data-t="faq_a8"><p>Sí. Dependiendo de la temporada y disponibilidad, ofrecemos yates, restaurantes exclusivos, chef privado, experiencias locales y más. Pregúntanos por WhatsApp — te decimos qué hay disponible para tu fecha.</p></div>
+      </details>
+
+    </div>
+  </div>
+</section>
+
 </main>
 
 <!-- ░░░░░ FOOTER ░░░░░ -->
@@ -362,9 +413,9 @@
 <!-- Modal de reserva (carrito) — se construye en js/reservation.js -->
 <div class="rmodal" id="reserveModal" data-api="https://tul-da-agent-production.up.railway.app" hidden></div>
 
-<script src="js/i18n.js?v=3" defer></script>
-<script src="js/main.js?v=3" defer></script>
-<script src="js/reservation.js?v=3" defer></script>
-<script src="js/dates.js?v=3" defer></script>
+<script src="js/i18n.js?v=4" defer></script>
+<script src="js/main.js?v=4" defer></script>
+<script src="js/reservation.js?v=4" defer></script>
+<script src="js/dates.js?v=4" defer></script>
 </body>
 </html>
