@@ -204,7 +204,7 @@
     var subtotal = unitPrice(state.pkg) * state.qty;
     var iva = subtotal * cfg.ivaRate;
     var total = subtotal + iva;
-    var dateTxt = state.dateObj ? fmtDate(state.dateObj.date) : '—';
+    var dateTxt = state.dateObj ? fmtRange(state.dateObj.date, state.dateObj.endDate) : '—';
     var testBlock = '';
     if (cfg.testMode) {
       testBlock =
@@ -263,6 +263,13 @@
     var d = parseInt(p[2], 10), mo = t.months[parseInt(p[1], 10) - 1], y = p[0];
     return lg === 'en' ? (mo + ' ' + d + ', ' + y) : (d + ' ' + mo + ' ' + y);
   }
+  // Rango de la salida: "30 jul – 3 ago 2026" (o un solo día si no hay endDate).
+  function fmtRange(start, end) {
+    if (!end || end === start) return fmtDate(start);
+    var lg = lang(), t = STR[lg];
+    function dm(iso) { var p = iso.split('-'); var d = parseInt(p[2], 10), mo = t.months[parseInt(p[1], 10) - 1]; return lg === 'en' ? (mo + ' ' + d) : (d + ' ' + mo); }
+    return dm(start) + ' – ' + fmtDate(end);
+  }
   function renderDates() {
     var t = STR[lang()];
     elContent.innerHTML = '<h4 class="rmodal__h">' + esc(t.pick_date) + '</h4>' +
@@ -293,6 +300,17 @@
     var canPrev = range && (y > range.min.y || (y === range.min.y && m > range.min.m));
     var canNext = range && (y < range.max.y || (y === range.max.y && m < range.max.m));
 
+    // Días de continuación de cada viaje (start+1..endDate) → mostrar el rango.
+    var contMap = {};
+    (availCache[state.pkg] || []).forEach(function (dd) {
+      if (!dd.endDate || dd.endDate === dd.date) return;
+      var s = new Date(dd.date + 'T00:00:00'), e = new Date(dd.endDate + 'T00:00:00');
+      for (var x = new Date(s.getTime() + 86400000); x <= e; x = new Date(x.getTime() + 86400000)) {
+        var ci = x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0');
+        contMap[ci] = dd.id;
+      }
+    });
+
     var cells = '';
     for (var i = 0; i < firstDow; i++) cells += '<span class="rmodal__day rmodal__day--pad"></span>';
     for (var d = 1; d <= days; d++) {
@@ -305,6 +323,9 @@
           d + '<i>' + info.spotsLeft + '</i></button>';
       } else if (info && info.status === 'sold_out') {
         cells += '<span class="rmodal__day rmodal__day--sold">' + d + '</span>';
+      } else if (contMap[iso]) {
+        var selr = state.dateId === contMap[iso] ? ' is-selrange' : '';
+        cells += '<span class="rmodal__day rmodal__day--range' + selr + '">' + d + '</span>';
       } else {
         cells += '<span class="rmodal__day rmodal__day--off">' + d + '</span>';
       }
