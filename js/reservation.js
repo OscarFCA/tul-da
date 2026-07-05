@@ -28,7 +28,11 @@
       spots_left: 'lugares', soldout: 'Agotado', no_dates: 'Sin fechas disponibles para este paquete por ahora.',
       tickets: '¿Cuántos boletos?', tickets_sub: 'Máximo según lugares disponibles.',
       your_data: 'Tus datos', name: 'Nombre completo', email: 'Correo electrónico', phone: 'WhatsApp / Teléfono',
-      summary: 'Resumen', cart_empty: 'Tu selección aparecerá aquí.', pkg_l: 'Paquete', date_l: 'Fecha', qty_l: 'Boletos', total_l: 'Total',
+      summary: 'Resumen', cart_empty: 'Tu selección aparecerá aquí.', pkg_l: 'Paquete', date_l: 'Fecha', qty_l: 'Boletos',
+      currency_l: 'Moneda', subtotal_l: 'Subtotal', iva_l: 'IVA (16%)', total_l: 'Total',
+      test_charge: 'Cargo de prueba', test_note2: 'Modo prueba: se cobra el mínimo. Usa la tarjeta 4242 4242 4242 4242.',
+      diet_q: '¿Tienes restricciones alimenticias o alergias?',
+      diet_notes_ph: '¿Algo más que debamos saber? Alergias graves, preferencias específicas…',
       back: 'Atrás', next: 'Continuar', pay: 'Ir a pagar',
       test: 'Modo prueba · usa la tarjeta 4242 4242 4242 4242 (no se cobra dinero real).',
       test_price: 'Montos de prueba · $10 MXN por boleto.',
@@ -46,7 +50,11 @@
       spots_left: 'spots', soldout: 'Sold out', no_dates: 'No dates available for this package right now.',
       tickets: 'How many tickets?', tickets_sub: 'Max based on available spots.',
       your_data: 'Your details', name: 'Full name', email: 'Email', phone: 'WhatsApp / Phone',
-      summary: 'Summary', cart_empty: 'Your selection will appear here.', pkg_l: 'Package', date_l: 'Date', qty_l: 'Tickets', total_l: 'Total',
+      summary: 'Summary', cart_empty: 'Your selection will appear here.', pkg_l: 'Package', date_l: 'Date', qty_l: 'Tickets',
+      currency_l: 'Currency', subtotal_l: 'Subtotal', iva_l: 'Tax (16%)', total_l: 'Total',
+      test_charge: 'Test charge', test_note2: 'Test mode: the minimum is charged. Use card 4242 4242 4242 4242.',
+      diet_q: 'Any dietary restrictions or allergies?',
+      diet_notes_ph: 'Anything else we should know? Serious allergies, specific preferences…',
       back: 'Back', next: 'Continue', pay: 'Proceed to payment',
       test: 'Test mode · use card 4242 4242 4242 4242 (no real charge).',
       test_price: 'Test amounts · $10 MXN per ticket.',
@@ -63,14 +71,35 @@
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
     });
   }
-  function money(n) {
-    return new Intl.NumberFormat(STR[lang()].locale, { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(n);
+  // Config del backend (referencia de precios = MXN).
+  var cfg = { rates: { MXN: 1 }, ivaRate: 0.16, testMode: false, testAmounts: {}, currencies: ['MXN', 'USD', 'EUR'] };
+  var CUR_DEC = { MXN: 0, USD: 2, EUR: 2 };
+
+  // Opciones dietéticas: value canónico (= choice en Airtable, en español) + etiquetas.
+  var DIET_OPTS = [
+    { v: 'Vegetariano', es: 'Vegetariano', en: 'Vegetarian' },
+    { v: 'Vegano', es: 'Vegano', en: 'Vegan' },
+    { v: 'Sin gluten', es: 'Sin gluten', en: 'Gluten-free' },
+    { v: 'Sin lácteos', es: 'Sin lácteos', en: 'Dairy-free' },
+    { v: 'Sin mariscos', es: 'Sin mariscos', en: 'Shellfish-free' },
+    { v: 'Sin nueces', es: 'Sin nueces', en: 'Nut-free' },
+    { v: 'Kosher', es: 'Kosher', en: 'Kosher' },
+    { v: 'Halal', es: 'Halal', en: 'Halal' },
+  ];
+
+  // Formatea un monto EN MXN mostrándolo en la moneda seleccionada (convertido).
+  function money(mxn) {
+    var cur = state.currency;
+    var amt = mxn * (cfg.rates[cur] || 1);
+    return new Intl.NumberFormat(STR[lang()].locale, { style: 'currency', currency: cur, maximumFractionDigits: CUR_DEC[cur] }).format(amt);
   }
-  // Precio por boleto: en modo prueba (testUnit en centavos) todos valen lo mismo.
-  function unitPrice(key) { return state.testUnit != null ? state.testUnit / 100 : PRICE[key]; }
+  function fmtCurMinor(minor, cur) {
+    return new Intl.NumberFormat(STR[lang()].locale, { style: 'currency', currency: cur, maximumFractionDigits: CUR_DEC[cur] }).format((minor || 0) / 100);
+  }
+  function unitPrice(key) { return PRICE[key]; } // referencia siempre MXN
 
   /* ---- Estado ---- */
-  var state = { step: 0, pkg: null, dateId: null, dateObj: null, qty: 1, name: '', email: '', phone: '', cal: null, testUnit: null };
+  var state = { step: 0, pkg: null, dateId: null, dateObj: null, qty: 1, name: '', email: '', phone: '', cal: null, currency: 'MXN', dietary: { enabled: false, restrictions: [], notes: '' } };
   var availCache = {}; // pkg → array de fechas
   var availByIso = {}; // 'YYYY-MM-DD' → {id, spotsLeft, status}
 
@@ -162,20 +191,46 @@
 
   function renderCart() {
     var t = STR[lang()];
+    var curSel = '<div class="rmodal__curr" role="group" aria-label="' + esc(t.currency_l) + '">' +
+      cfg.currencies.map(function (c) {
+        return '<button type="button" class="rmodal__curbtn' + (state.currency === c ? ' is-sel' : '') + '" data-cur="' + c + '">' + c + '</button>';
+      }).join('') + '</div>';
     var head = '<div class="rmodal__carthead">' + esc(t.summary) + '</div>';
+
     if (!state.pkg) {
-      elCart.innerHTML = head + '<p class="rmodal__cartempty">' + esc(t.cart_empty) + '</p>';
-      return;
+      elCart.innerHTML = head + curSel + '<p class="rmodal__cartempty">' + esc(t.cart_empty) + '</p>';
+      bindCur(); return;
     }
-    var total = unitPrice(state.pkg) * state.qty;
+    var subtotal = unitPrice(state.pkg) * state.qty;
+    var iva = subtotal * cfg.ivaRate;
+    var total = subtotal + iva;
     var dateTxt = state.dateObj ? fmtDate(state.dateObj.date) : '—';
-    var note = state.testUnit != null ? '<p class="rmodal__cartnote">' + esc(t.test_price) + '</p>' : '';
-    elCart.innerHTML = head +
+    var testBlock = '';
+    if (cfg.testMode) {
+      testBlock =
+        '<div class="rmodal__cartrow rmodal__cartrow--test"><span>' + esc(t.test_charge) + '</span><b>' +
+          fmtCurMinor(cfg.testAmounts[state.currency], state.currency) + '</b></div>' +
+        '<p class="rmodal__cartnote">' + esc(t.test_note2) + '</p>';
+    }
+    elCart.innerHTML = head + curSel +
       '<div class="rmodal__cartrow"><span>' + esc(t.pkg_l) + '</span><b>' + esc(state.pkg) + '</b></div>' +
       '<div class="rmodal__cartrow"><span>' + esc(t.date_l) + '</span><b>' + esc(dateTxt) + '</b></div>' +
       '<div class="rmodal__cartrow"><span>' + esc(t.qty_l) + '</span><b>' + state.qty + '</b></div>' +
+      '<div class="rmodal__cartrow"><span>' + esc(t.subtotal_l) + '</span><b>' + money(subtotal) + '</b></div>' +
+      '<div class="rmodal__cartrow"><span>' + esc(t.iva_l) + '</span><b>' + money(iva) + '</b></div>' +
       '<div class="rmodal__cartrow rmodal__cartrow--total"><span>' + esc(t.total_l) + '</span><b>' + money(total) + '</b></div>' +
-      note;
+      testBlock;
+    bindCur();
+  }
+
+  function bindCur() {
+    elCart.querySelectorAll('[data-cur]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        state.currency = b.getAttribute('data-cur');
+        renderCart();
+        if (state.step === 0) renderPackages(); // actualiza precios de las tarjetas
+      });
+    });
   }
 
   /* ---- Paso 0: Paquetes ---- */
@@ -297,19 +352,43 @@
 
   /* ---- Paso 3: Datos ---- */
   function renderDetails() {
-    var t = STR[lang()];
+    var t = STR[lang()], lg = lang();
+    var d = state.dietary;
+    var pills = DIET_OPTS.map(function (o) {
+      var on = d.restrictions.indexOf(o.v) > -1 ? ' is-sel' : '';
+      return '<button type="button" class="rmodal__pill' + on + '" data-diet="' + esc(o.v) + '">' + esc(o[lg]) + '</button>';
+    }).join('');
     elContent.innerHTML =
       '<h4 class="rmodal__h">' + esc(t.your_data) + '</h4>' +
       '<div class="rmodal__form">' +
         '<label class="rmodal__field"><span>' + esc(t.name) + '</span><input type="text" id="rf_name" autocomplete="name" value="' + esc(state.name) + '"></label>' +
         '<label class="rmodal__field"><span>' + esc(t.email) + '</span><input type="email" id="rf_email" autocomplete="email" value="' + esc(state.email) + '"></label>' +
         '<label class="rmodal__field"><span>' + esc(t.phone) + '</span><input type="tel" id="rf_phone" autocomplete="tel" value="' + esc(state.phone) + '"></label>' +
+        '<label class="rmodal__check"><input type="checkbox" id="rf_diet"' + (d.enabled ? ' checked' : '') + '> <span>' + esc(t.diet_q) + '</span></label>' +
+        '<div class="rmodal__diet' + (d.enabled ? ' is-open' : '') + '" id="rf_dietbox">' +
+          '<div class="rmodal__pills">' + pills + '</div>' +
+          '<textarea class="rmodal__textarea" id="rf_dietnotes" rows="3" placeholder="' + esc(t.diet_notes_ph) + '">' + esc(d.notes) + '</textarea>' +
+        '</div>' +
         '<p class="rmodal__err" id="rf_err" hidden></p>' +
         '<p class="rmodal__test">' + esc(t.test) + '</p>' +
       '</div>';
     ['name', 'email', 'phone'].forEach(function (f) {
       elContent.querySelector('#rf_' + f).addEventListener('input', function (e) { state[f] = e.target.value; });
     });
+    var box = elContent.querySelector('#rf_dietbox');
+    elContent.querySelector('#rf_diet').addEventListener('change', function (e) {
+      d.enabled = e.target.checked;
+      if (d.enabled) { box.classList.add('is-open'); }
+      else { box.classList.remove('is-open'); d.restrictions = []; d.notes = ''; renderDetails(); }
+    });
+    elContent.querySelectorAll('[data-diet]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var v = b.getAttribute('data-diet'), i = d.restrictions.indexOf(v);
+        if (i > -1) { d.restrictions.splice(i, 1); b.classList.remove('is-sel'); }
+        else { d.restrictions.push(v); b.classList.add('is-sel'); }
+      });
+    });
+    elContent.querySelector('#rf_dietnotes').addEventListener('input', function (e) { d.notes = e.target.value; });
   }
 
   /* ---- Navegación ---- */
@@ -337,7 +416,13 @@
     btnNext.disabled = true; btnNext.textContent = '…';
     fetch(API + '/api/checkout', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ package: state.pkg, dateId: state.dateId, quantity: state.qty, name: state.name.trim(), email: state.email.trim(), phone: state.phone.trim() })
+      body: JSON.stringify({
+        package: state.pkg, dateId: state.dateId, quantity: state.qty,
+        name: state.name.trim(), email: state.email.trim(), phone: state.phone.trim(),
+        currency: state.currency,
+        dietaryRestrictions: state.dietary.enabled ? state.dietary.restrictions : [],
+        dietaryNotes: state.dietary.enabled ? state.dietary.notes.trim() : '',
+      })
     })
       .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
       .then(function (res) {
@@ -359,10 +444,18 @@
     open({ package: trigger.getAttribute('data-package') });
   });
 
-  // Config pública (modo prueba de montos). Si aplica, actualiza precios mostrados.
+  // Config pública: tipos de cambio, IVA, modo prueba y montos de prueba por moneda.
   fetch(API + '/api/config')
     .then(function (r) { return r.json(); })
-    .then(function (c) { if (c && c.testUnitAmount != null) { state.testUnit = c.testUnitAmount; if (!modal.hidden) render(); } })
+    .then(function (c) {
+      if (!c) return;
+      if (c.rates) cfg.rates = c.rates;
+      if (typeof c.ivaRate === 'number') cfg.ivaRate = c.ivaRate;
+      if (Array.isArray(c.currencies)) cfg.currencies = c.currencies;
+      cfg.testMode = !!c.testMode;
+      cfg.testAmounts = c.testAmounts || {};
+      if (!modal.hidden) render();
+    })
     .catch(function () {});
 
   window.TuldaReserve = { open: open };

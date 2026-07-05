@@ -435,6 +435,23 @@ a { color: inherit; text-decoration: none; }
 .rmodal__cartrow--total { border-bottom: none; margin-top: 6px; padding-top: 14px; }
 .rmodal__cartrow--total b { font-family: var(--font-display); font-size: 24px; color: var(--gold); }
 .rmodal__cartnote { margin: 14px 0 0; font-size: 11px; color: var(--text-mute); font-style: italic; line-height: 1.5; }
+/* Selector de moneda */
+.rmodal__curr { display: flex; gap: 6px; margin: 4px 0 14px; }
+.rmodal__curbtn { flex: 1; padding: 8px 0; background: none; border: 1px solid var(--line-soft); border-radius: 3px; color: var(--text-mute); font-family: var(--font-body); font-size: 11px; letter-spacing: .1em; cursor: pointer; transition: all .2s; }
+.rmodal__curbtn:hover { border-color: var(--line); color: var(--text-soft); }
+.rmodal__curbtn.is-sel { border-color: var(--gold); color: var(--obsidian); background: var(--gold); font-weight: 600; }
+.rmodal__cartrow--test b { color: var(--pale-gold); }
+/* Restricciones alimenticias */
+.rmodal__check { display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 14px; color: var(--text-soft); }
+.rmodal__check input { width: 17px; height: 17px; accent-color: var(--gold); cursor: pointer; flex-shrink: 0; }
+.rmodal__diet { max-height: 0; opacity: 0; overflow: hidden; transition: max-height .3s ease, opacity .3s ease, margin .3s ease; }
+.rmodal__diet.is-open { max-height: 420px; opacity: 1; margin-top: 4px; }
+.rmodal__pills { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.rmodal__pill { padding: 8px 16px; background: rgba(255,255,255,.03); border: 1px solid var(--line-soft); border-radius: 100px; color: var(--text-soft); font-family: var(--font-body); font-size: 13px; cursor: pointer; transition: all .2s; }
+.rmodal__pill:hover { border-color: var(--line); }
+.rmodal__pill.is-sel { background: var(--gold); border-color: var(--gold); color: var(--obsidian); font-weight: 500; }
+.rmodal__textarea { width: 100%; background: rgba(255,255,255,.03); border: 1px solid var(--line-soft); border-radius: 3px; padding: 12px 14px; color: var(--text); font-family: var(--font-body); font-size: 14px; line-height: 1.5; resize: vertical; transition: border-color .2s; }
+.rmodal__textarea:focus { outline: none; border-color: var(--gold); }
 /* Acciones dentro del panel derecho (siempre visibles) */
 .rmodal__actions { margin-top: auto; display: flex; flex-direction: column; gap: 10px; padding-top: 18px; }
 .rmodal__btn { padding: 14px 28px; border-radius: 2px; font-family: var(--font-body); font-size: 12px; letter-spacing: .16em; text-transform: uppercase; cursor: pointer; transition: all .2s; border: 1px solid var(--gold); }
