@@ -73,6 +73,7 @@
     var r = proximaSec ? proximaSec.getBoundingClientRect() : { bottom: 9999 };
     var show = cur && !animating && r.bottom < 80; // visible cuando el principal ya pasó arriba
     mini.classList.toggle('is-shown', !!show);
+    document.body.classList.toggle('cd-mini-on', !!show); // coordina el FAB de WhatsApp en móvil
   }
   window.addEventListener('scroll', onScroll, { passive: true });
 
