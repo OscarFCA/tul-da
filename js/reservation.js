@@ -1,7 +1,8 @@
 /* ====================================================================
    TUL - DÁ — Modal de reserva (carrito).
-   Flujo: Paquete → Fecha (calendario con lugares) → Boletos → Datos → Stripe.
-   Disponibilidad y pago vienen del backend (Railway). La BD (Airtable) manda.
+   Flujo: Fecha + Paquete (una sola vista con calendario) → Boletos → Datos → Stripe.
+   El calendario muestra las salidas; al elegir un día ves los paquetes con
+   los lugares que quedan ese día y eliges. Disponibilidad y pago: backend.
    ==================================================================== */
 (function () {
   'use strict';
@@ -9,12 +10,13 @@
   var modal = document.getElementById('reserveModal');
   if (!modal) return;
   var API = modal.getAttribute('data-api');
+  var PKG_ORDER = ['Classic', 'Premium', 'VIP'];
 
   /* ---- Datos de paquetes (precio base sin IVA, MXN) ---- */
   var PACKAGES = [
-    { key: 'Classic', price: 6666, tag: { es: 'Lo esencial, sin extras.', en: 'The essentials, nothing extra.' } },
-    { key: 'Premium', price: 9999, tag: { es: 'Más profundidad. Más silencio.', en: 'More depth. More silence.' } },
-    { key: 'VIP', price: 18881, tag: { es: 'El lujo que se siente al llegar.', en: 'Luxury you feel on arrival.' } }
+    { key: 'Classic', price: 6666 },
+    { key: 'Premium', price: 9999 },
+    { key: 'VIP', price: 18881 }
   ];
   var PRICE = {}; PACKAGES.forEach(function (p) { PRICE[p.key] = p.price; });
 
@@ -22,10 +24,11 @@
   var STR = {
     es: {
       title: 'Reserva tu experiencia',
-      steps: ['Paquete', 'Fecha', 'Boletos', 'Tus datos'],
-      pick_pkg: 'Elige tu paquete', per: '+ IVA · por persona',
-      pick_date: 'Elige tu fecha', pick_date_sub: 'Salidas con lugar disponible',
-      spots_left: 'lugares', soldout: 'Agotado', no_dates: 'Sin fechas disponibles para este paquete por ahora.',
+      steps: ['Fecha y paquete', 'Boletos', 'Tus datos'],
+      pick_datepkg: 'Elige fecha y paquete', pick_datepkg_sub: 'Elige un día y verás los paquetes con lugar disponible.',
+      pkg_for_day: 'Paquetes para esta fecha', pick_day_first: 'Primero elige una fecha disponible.',
+      per: '+ IVA · p/p', spots_left: 'lugares', spot_1: 'lugar', soldout: 'Agotado',
+      no_dates: 'Sin fechas disponibles por ahora.',
       tickets: '¿Cuántos boletos?', tickets_sub: 'Máximo según lugares disponibles.',
       your_data: 'Tus datos', name: 'Nombre completo', email: 'Correo electrónico', phone: 'WhatsApp / Teléfono',
       summary: 'Resumen', cart_empty: 'Tu selección aparecerá aquí.', pkg_l: 'Paquete', date_l: 'Fecha', qty_l: 'Boletos',
@@ -35,8 +38,7 @@
       diet_notes_ph: '¿Algo más que debamos saber? Alergias graves, preferencias específicas…',
       back: 'Atrás', next: 'Continuar', pay: 'Ir a pagar',
       test: 'Modo prueba · usa la tarjeta 4242 4242 4242 4242 (no se cobra dinero real).',
-      test_price: 'Montos de prueba · $10 MXN por boleto.',
-      err_pkg: 'Elige un paquete.', err_date: 'Elige una fecha disponible.',
+      err_datepkg: 'Elige una fecha y un paquete disponible.',
       err_name: 'Escribe tu nombre.', err_email: 'Correo inválido.', err_phone: 'Escribe tu teléfono.',
       loading: 'Cargando fechas…', pay_err: 'No pudimos iniciar el pago. Intenta de nuevo.',
       months: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
@@ -44,10 +46,11 @@
     },
     en: {
       title: 'Reserve your experience',
-      steps: ['Package', 'Date', 'Tickets', 'Your details'],
-      pick_pkg: 'Choose your package', per: '+ tax · per person',
-      pick_date: 'Choose your date', pick_date_sub: 'Departures with spots available',
-      spots_left: 'spots', soldout: 'Sold out', no_dates: 'No dates available for this package right now.',
+      steps: ['Date & package', 'Tickets', 'Your details'],
+      pick_datepkg: 'Choose date & package', pick_datepkg_sub: 'Pick a day and you’ll see the packages with spots left.',
+      pkg_for_day: 'Packages for this date', pick_day_first: 'First pick an available date.',
+      per: '+ tax · pp', spots_left: 'spots', spot_1: 'spot', soldout: 'Sold out',
+      no_dates: 'No dates available right now.',
       tickets: 'How many tickets?', tickets_sub: 'Max based on available spots.',
       your_data: 'Your details', name: 'Full name', email: 'Email', phone: 'WhatsApp / Phone',
       summary: 'Summary', cart_empty: 'Your selection will appear here.', pkg_l: 'Package', date_l: 'Date', qty_l: 'Tickets',
@@ -57,8 +60,7 @@
       diet_notes_ph: 'Anything else we should know? Serious allergies, specific preferences…',
       back: 'Back', next: 'Continue', pay: 'Proceed to payment',
       test: 'Test mode · use card 4242 4242 4242 4242 (no real charge).',
-      test_price: 'Test amounts · $10 MXN per ticket.',
-      err_pkg: 'Choose a package.', err_date: 'Choose an available date.',
+      err_datepkg: 'Choose an available date and package.',
       err_name: 'Enter your name.', err_email: 'Invalid email.', err_phone: 'Enter your phone.',
       loading: 'Loading dates…', pay_err: "We couldn't start the payment. Please try again.",
       months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
@@ -71,11 +73,8 @@
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
     });
   }
-  // Config del backend (referencia de precios = MXN).
   var cfg = { rates: { MXN: 1 }, ivaRate: 0.16, testMode: false, testAmounts: {}, currencies: ['MXN', 'USD', 'EUR'] };
   var CUR_DEC = { MXN: 0, USD: 2, EUR: 2 };
-
-  // Opciones dietéticas: value canónico (= choice en Airtable, en español) + etiquetas.
   var DIET_OPTS = [
     { v: 'Vegetariano', es: 'Vegetariano', en: 'Vegetarian' },
     { v: 'Vegano', es: 'Vegano', en: 'Vegan' },
@@ -84,24 +83,21 @@
     { v: 'Sin mariscos', es: 'Sin mariscos', en: 'Shellfish-free' },
     { v: 'Sin nueces', es: 'Sin nueces', en: 'Nut-free' },
     { v: 'Kosher', es: 'Kosher', en: 'Kosher' },
-    { v: 'Halal', es: 'Halal', en: 'Halal' },
+    { v: 'Halal', es: 'Halal', en: 'Halal' }
   ];
-
-  // Formatea un monto EN MXN mostrándolo en la moneda seleccionada (convertido).
   function money(mxn) {
-    var cur = state.currency;
-    var amt = mxn * (cfg.rates[cur] || 1);
+    var cur = state.currency, amt = mxn * (cfg.rates[cur] || 1);
     return new Intl.NumberFormat(STR[lang()].locale, { style: 'currency', currency: cur, maximumFractionDigits: CUR_DEC[cur] }).format(amt);
   }
   function fmtCurMinor(minor, cur) {
     return new Intl.NumberFormat(STR[lang()].locale, { style: 'currency', currency: cur, maximumFractionDigits: CUR_DEC[cur] }).format((minor || 0) / 100);
   }
-  function unitPrice(key) { return PRICE[key]; } // referencia siempre MXN
+  function unitPrice(key) { return PRICE[key]; }
 
   /* ---- Estado ---- */
-  var state = { step: 0, pkg: null, dateId: null, dateObj: null, qty: 1, name: '', email: '', phone: '', cal: null, currency: 'MXN', dietary: { enabled: false, restrictions: [], notes: '' } };
-  var availCache = {}; // pkg → array de fechas
-  var availByIso = {}; // 'YYYY-MM-DD' → {id, spotsLeft, status}
+  var state = { step: 0, dateIso: null, pkg: null, dateId: null, dateObj: null, qty: 1, name: '', email: '', phone: '', cal: null, currency: 'MXN', dietary: { enabled: false, restrictions: [], notes: '' } };
+  var depByIso = {};   // 'YYYY-MM-DD' → { iso, endDate, packages:[{key,id,spotsLeft,status}], total, status }
+  var allLoaded = false;
 
   /* ---- Estructura del modal ---- */
   modal.innerHTML =
@@ -128,44 +124,68 @@
   var elTitle = modal.querySelector('.rmodal__title');
   var btnBack = modal.querySelector('[data-back]');
   var btnNext = modal.querySelector('[data-next]');
+  var LAST_STEP = 2;
 
   /* ---- Apertura / cierre ---- */
   function open(opts) {
     opts = opts || {};
-    state.step = 0; state.qty = 1; state.dateId = null; state.dateObj = null; state.cal = null;
-    if (opts.package && PRICE[opts.package]) state.pkg = opts.package;
-    if (opts.dateId) state.pendingDateId = opts.dateId;
+    state.step = 0; state.qty = 1; state.dateIso = null; state.dateId = null; state.dateObj = null; state.cal = null;
+    if (opts.package && PRICE[opts.package]) state.pkg = opts.package; // paquete preferido
     modal.hidden = false;
     document.body.style.overflow = 'hidden';
-    // Si viene con paquete (y quizá fecha) preseleccionado, avanza.
-    if (state.pkg && opts.dateId) { ensureAvail(state.pkg).then(function () { selectPendingDate(); state.step = 2; render(); }); return; }
-    if (state.pkg) { state.step = 1; }
-    render();
+    ensureAllAvail().then(function () {
+      if (opts.dateId) {
+        // buscar el registro y preseleccionar día + paquete
+        Object.keys(depByIso).some(function (iso) {
+          var p = depByIso[iso].packages.filter(function (x) { return x.id === opts.dateId; })[0];
+          if (p) { state.dateIso = iso; pickPackageForDay(iso, p.key); return true; }
+          return false;
+        });
+      }
+      render();
+    });
+    render(); // pinta el estado de carga mientras llega la disponibilidad
   }
   function close() { modal.hidden = true; document.body.style.overflow = ''; }
-  function selectPendingDate() {
-    if (!state.pendingDateId) return;
-    var list = availCache[state.pkg] || [];
-    var d = list.filter(function (x) { return x.id === state.pendingDateId; })[0];
-    if (d) { state.dateId = d.id; state.dateObj = d; }
-    state.pendingDateId = null;
-  }
-
   modal.addEventListener('click', function (e) { if (e.target.hasAttribute('data-close')) close(); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !modal.hidden) close(); });
 
-  /* ---- Disponibilidad ---- */
-  function ensureAvail(pkg) {
-    if (availCache[pkg]) return Promise.resolve(availCache[pkg]);
-    return fetch(API + '/api/availability?package=' + encodeURIComponent(pkg))
+  /* ---- Disponibilidad (todas las salidas, agrupadas por día) ---- */
+  function ensureAllAvail() {
+    if (allLoaded) return Promise.resolve();
+    return fetch(API + '/api/availability')
       .then(function (r) { return r.json(); })
       .then(function (j) {
-        var list = (j.dates || []);
-        availCache[pkg] = list;
-        list.forEach(function (d) { if (d.date) availByIso[d.date] = d; });
-        return list;
+        (j.dates || []).forEach(function (d) {
+          if (!d.date) return;
+          var key = (d.packageNames && d.packageNames[0]) || '?';
+          var dep = depByIso[d.date] || (depByIso[d.date] = { iso: d.date, endDate: d.endDate, packages: [], total: 0, status: 'open' });
+          dep.packages.push({ key: key, id: d.id, spotsLeft: d.spotsLeft, status: d.status });
+          if (d.endDate) dep.endDate = d.endDate;
+        });
+        Object.keys(depByIso).forEach(function (iso) {
+          var dep = depByIso[iso];
+          dep.packages.sort(function (a, b) { return PKG_ORDER.indexOf(a.key) - PKG_ORDER.indexOf(b.key); });
+          dep.total = dep.packages.reduce(function (s, p) { return s + Math.max(0, p.spotsLeft); }, 0);
+          dep.status = dep.total <= 0 ? 'sold_out' : (dep.total <= 5 ? 'low_availability' : 'open');
+        });
+        allLoaded = true;
       })
-      .catch(function () { availCache[pkg] = []; return []; });
+      .catch(function () { allLoaded = true; });
+  }
+  // Elige un paquete para el día iso, prefiriendo `prefer` o el actual state.pkg.
+  function pickPackageForDay(iso, prefer) {
+    var dep = depByIso[iso];
+    state.dateIso = iso;
+    if (!dep) { state.pkg = null; state.dateId = null; state.dateObj = null; return; }
+    var bookable = dep.packages.filter(function (p) { return p.spotsLeft > 0 && p.status !== 'sold_out'; });
+    var want = prefer || state.pkg;
+    var chosen = bookable.filter(function (p) { return p.key === want; })[0] || bookable[0] || null;
+    if (chosen) {
+      state.pkg = chosen.key; state.dateId = chosen.id; state.dateObj = chosen;
+      if (state.qty > chosen.spotsLeft) state.qty = chosen.spotsLeft;
+      if (state.qty < 1) state.qty = 1;
+    } else { state.pkg = null; state.dateId = null; state.dateObj = null; }
   }
 
   /* ---- Render principal ---- */
@@ -177,15 +197,13 @@
       return '<li class="' + cls + '"><span>' + (i + 1) + '</span>' + esc(s) + '</li>';
     }).join('');
 
-    if (state.step === 0) renderPackages();
-    else if (state.step === 1) renderDates();
-    else if (state.step === 2) renderTickets();
-    else if (state.step === 3) renderDetails();
+    if (state.step === 0) renderDatePkg();
+    else if (state.step === 1) renderTickets();
+    else if (state.step === 2) renderDetails();
 
-    // Footer
     btnBack.textContent = t.back;
     btnBack.style.visibility = state.step === 0 ? 'hidden' : 'visible';
-    btnNext.textContent = state.step === 3 ? t.pay : t.next;
+    btnNext.textContent = state.step === LAST_STEP ? t.pay : t.next;
     renderCart();
   }
 
@@ -197,14 +215,15 @@
       }).join('') + '</div>';
     var head = '<div class="rmodal__carthead">' + esc(t.summary) + '</div>';
 
-    if (!state.pkg) {
+    if (!state.pkg || !state.dateObj) {
       elCart.innerHTML = head + curSel + '<p class="rmodal__cartempty">' + esc(t.cart_empty) + '</p>';
       bindCur(); return;
     }
     var subtotal = unitPrice(state.pkg) * state.qty;
     var iva = subtotal * cfg.ivaRate;
     var total = subtotal + iva;
-    var dateTxt = state.dateObj ? fmtRange(state.dateObj.date, state.dateObj.endDate) : '—';
+    var depSel = depByIso[state.dateIso];
+    var dateTxt = fmtRange(state.dateIso, depSel && depSel.endDate);
     var testBlock = '';
     if (cfg.testMode) {
       testBlock =
@@ -222,92 +241,78 @@
       testBlock;
     bindCur();
   }
-
   function bindCur() {
     elCart.querySelectorAll('[data-cur]').forEach(function (b) {
       b.addEventListener('click', function () {
         state.currency = b.getAttribute('data-cur');
         renderCart();
-        if (state.step === 0) renderPackages(); // actualiza precios de las tarjetas
+        if (state.step === 0) drawPkgPanel(); // precios de los paquetes del día
       });
     });
   }
 
-  /* ---- Paso 0: Paquetes ---- */
-  function renderPackages() {
-    var lg = lang(), t = STR[lg];
-    elContent.innerHTML =
-      '<h4 class="rmodal__h">' + esc(t.pick_pkg) + '</h4>' +
-      '<div class="rmodal__pkgs">' + PACKAGES.map(function (p) {
-        var on = state.pkg === p.key ? ' is-sel' : '';
-        return '<button type="button" class="rmodal__pkg' + on + '" data-pkg="' + p.key + '">' +
-          '<span class="rmodal__pkgname">' + esc(p.key) + '</span>' +
-          '<span class="rmodal__pkgprice">' + money(unitPrice(p.key)) + '</span>' +
-          '<span class="rmodal__pkgper">' + esc(t.per) + '</span>' +
-          '<span class="rmodal__pkgtag">' + esc(p.tag[lg]) + '</span>' +
-        '</button>';
-      }).join('') + '</div>';
-    elContent.querySelectorAll('[data-pkg]').forEach(function (b) {
-      b.addEventListener('click', function () {
-        var newPkg = b.getAttribute('data-pkg');
-        if (state.pkg !== newPkg) { state.dateId = null; state.dateObj = null; state.qty = 1; state.cal = null; }
-        state.pkg = newPkg;
-        renderPackages(); renderCart();
-      });
-    });
-  }
-
-  /* ---- Paso 1: Fecha (calendario) ---- */
+  /* ---- Fechas ---- */
   function fmtDate(iso) {
     var lg = lang(), t = STR[lg], p = iso.split('-');
     var d = parseInt(p[2], 10), mo = t.months[parseInt(p[1], 10) - 1], y = p[0];
     return lg === 'en' ? (mo + ' ' + d + ', ' + y) : (d + ' ' + mo + ' ' + y);
   }
-  // Rango de la salida: "30 jul – 3 ago 2026" (o un solo día si no hay endDate).
   function fmtRange(start, end) {
     if (!end || end === start) return fmtDate(start);
     var lg = lang(), t = STR[lg];
     function dm(iso) { var p = iso.split('-'); var d = parseInt(p[2], 10), mo = t.months[parseInt(p[1], 10) - 1]; return lg === 'en' ? (mo + ' ' + d) : (d + ' ' + mo); }
     return dm(start) + ' – ' + fmtDate(end);
   }
-  function renderDates() {
+
+  /* ---- Paso 0: Fecha + Paquete (una sola vista) ---- */
+  function renderDatePkg() {
     var t = STR[lang()];
-    elContent.innerHTML = '<h4 class="rmodal__h">' + esc(t.pick_date) + '</h4>' +
-      '<p class="rmodal__sub">' + esc(t.pick_date_sub) + '</p>' +
-      '<div class="rmodal__cal" id="rmodalCal"><p class="rmodal__state">' + esc(t.loading) + '</p></div>';
-    ensureAvail(state.pkg).then(function (list) {
-      var avail = list.filter(function (d) { return d.status !== 'sold_out'; });
-      if (!list.length) { document.getElementById('rmodalCal').innerHTML = '<p class="rmodal__state">' + esc(t.no_dates) + '</p>'; return; }
-      if (!state.cal) {
-        var first = (avail[0] || list[0]).date.split('-');
-        state.cal = { y: parseInt(first[0], 10), m: parseInt(first[1], 10) - 1 };
-      }
-      drawCalendar();
-    });
+    if (!allLoaded) {
+      elContent.innerHTML = '<h4 class="rmodal__h">' + esc(t.pick_datepkg) + '</h4><p class="rmodal__state">' + esc(t.loading) + '</p>';
+      return;
+    }
+    if (!Object.keys(depByIso).length) {
+      elContent.innerHTML = '<h4 class="rmodal__h">' + esc(t.pick_datepkg) + '</h4><p class="rmodal__state">' + esc(t.no_dates) + '</p>';
+      return;
+    }
+    elContent.innerHTML =
+      '<h4 class="rmodal__h">' + esc(t.pick_datepkg) + '</h4>' +
+      '<p class="rmodal__sub">' + esc(t.pick_datepkg_sub) + '</p>' +
+      '<div class="rmodal__cal" id="rmodalCal"></div>' +
+      '<div class="rmodal__daypkgs-wrap" id="rmodalDayPkgs"></div>';
+    if (!state.cal) {
+      var firstOpen = Object.keys(depByIso).sort().filter(function (iso) { return depByIso[iso].status !== 'sold_out'; })[0] || Object.keys(depByIso).sort()[0];
+      var p = firstOpen.split('-'); state.cal = { y: +p[0], m: +p[1] - 1 };
+    }
+    drawCalendar();
+    drawPkgPanel();
   }
+
   function monthRange() {
-    var isos = (availCache[state.pkg] || []).map(function (d) { return d.date; }).filter(Boolean).sort();
+    var isos = Object.keys(depByIso).sort();
     if (!isos.length) return null;
     function ym(iso) { var p = iso.split('-'); return { y: +p[0], m: +p[1] - 1 }; }
     return { min: ym(isos[0]), max: ym(isos[isos.length - 1]) };
   }
+
   function drawCalendar() {
     var lg = lang(), t = STR[lg], cal = state.cal, box = document.getElementById('rmodalCal');
+    if (!box) return;
     var y = cal.y, m = cal.m;
-    var firstDow = (new Date(y, m, 1).getDay() + 6) % 7; // Lunes=0
+    var firstDow = (new Date(y, m, 1).getDay() + 6) % 7;
     var days = new Date(y, m + 1, 0).getDate();
     var range = monthRange();
     var canPrev = range && (y > range.min.y || (y === range.min.y && m > range.min.m));
     var canNext = range && (y < range.max.y || (y === range.max.y && m < range.max.m));
 
-    // Días de continuación de cada viaje (start+1..endDate) → mostrar el rango.
+    // Días de continuación (rango de la salida).
     var contMap = {};
-    (availCache[state.pkg] || []).forEach(function (dd) {
-      if (!dd.endDate || dd.endDate === dd.date) return;
-      var s = new Date(dd.date + 'T00:00:00'), e = new Date(dd.endDate + 'T00:00:00');
+    Object.keys(depByIso).forEach(function (iso) {
+      var dep = depByIso[iso];
+      if (!dep.endDate || dep.endDate === iso) return;
+      var s = new Date(iso + 'T00:00:00'), e = new Date(dep.endDate + 'T00:00:00');
       for (var x = new Date(s.getTime() + 86400000); x <= e; x = new Date(x.getTime() + 86400000)) {
-        var ci = x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0');
-        contMap[ci] = dd.id;
+        contMap[x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0')] = iso;
       }
     });
 
@@ -315,16 +320,16 @@
     for (var i = 0; i < firstDow; i++) cells += '<span class="rmodal__day rmodal__day--pad"></span>';
     for (var d = 1; d <= days; d++) {
       var iso = y + '-' + String(m + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
-      var info = availByIso[iso];
-      if (info && info.status !== 'sold_out') {
-        var sel = state.dateId === info.id ? ' is-sel' : '';
-        var low = info.status === 'low_availability' ? ' rmodal__day--low' : '';
+      var dep = depByIso[iso];
+      if (dep && dep.status !== 'sold_out') {
+        var sel = state.dateIso === iso ? ' is-sel' : '';
+        var low = dep.status === 'low_availability' ? ' rmodal__day--low' : '';
         cells += '<button type="button" class="rmodal__day rmodal__day--open' + low + sel + '" data-iso="' + iso + '">' +
-          d + '<i>' + info.spotsLeft + '</i></button>';
-      } else if (info && info.status === 'sold_out') {
+          d + '<i>' + dep.total + '</i></button>';
+      } else if (dep && dep.status === 'sold_out') {
         cells += '<span class="rmodal__day rmodal__day--sold">' + d + '</span>';
       } else if (contMap[iso]) {
-        var selr = state.dateId === contMap[iso] ? ' is-selrange' : '';
+        var selr = state.dateIso === contMap[iso] ? ' is-selrange' : '';
         cells += '<span class="rmodal__day rmodal__day--range' + selr + '">' + d + '</span>';
       } else {
         cells += '<span class="rmodal__day rmodal__day--off">' + d + '</span>';
@@ -337,23 +342,53 @@
         '<button type="button" class="rmodal__calnav" data-cal-next ' + (canNext ? '' : 'disabled') + '>›</button>' +
       '</div>' +
       '<div class="rmodal__wd">' + t.wd.map(function (w) { return '<span>' + w + '</span>'; }).join('') + '</div>' +
-      '<div class="rmodal__grid">' + cells + '</div>' +
-      '<p class="rmodal__callegend"><i class="lg lg--open"></i>' + esc(t.spots_left) +
-        ' &nbsp; <i class="lg lg--sold"></i>' + esc(t.soldout) + '</p>';
+      '<div class="rmodal__grid">' + cells + '</div>';
 
     box.querySelector('[data-cal-prev]').addEventListener('click', function () { if (m === 0) { cal.y--; cal.m = 11; } else cal.m--; drawCalendar(); });
     box.querySelector('[data-cal-next]').addEventListener('click', function () { if (m === 11) { cal.y++; cal.m = 0; } else cal.m++; drawCalendar(); });
     box.querySelectorAll('[data-iso]').forEach(function (b) {
       b.addEventListener('click', function () {
-        var info = availByIso[b.getAttribute('data-iso')];
-        state.dateId = info.id; state.dateObj = info;
-        if (state.qty > info.spotsLeft) state.qty = info.spotsLeft;
-        drawCalendar(); renderCart();
+        pickPackageForDay(b.getAttribute('data-iso'));
+        drawCalendar(); drawPkgPanel(); renderCart();
       });
     });
   }
 
-  /* ---- Paso 2: Boletos ---- */
+  // Panel de paquetes del día seleccionado (con lugares que quedan).
+  function drawPkgPanel() {
+    var t = STR[lang()], box = document.getElementById('rmodalDayPkgs');
+    if (!box) return;
+    if (!state.dateIso || !depByIso[state.dateIso]) {
+      box.innerHTML = '<p class="rmodal__daypkgs-hint">' + esc(t.pick_day_first) + '</p>';
+      return;
+    }
+    var dep = depByIso[state.dateIso];
+    box.innerHTML =
+      '<div class="rmodal__daypkgs-h">' + esc(t.pkg_for_day) + ' · ' + esc(fmtRange(state.dateIso, dep.endDate)) + '</div>' +
+      '<div class="rmodal__daypkgs">' + dep.packages.map(function (p) {
+        var out = p.spotsLeft <= 0 || p.status === 'sold_out';
+        var urg = p.spotsLeft <= 2 ? ' is-critical' : (p.spotsLeft <= 5 ? ' is-low' : '');
+        var seat = out ? esc(t.soldout) : '<b>' + p.spotsLeft + '</b> ' + esc(p.spotsLeft === 1 ? t.spot_1 : t.spots_left);
+        return '<button type="button" class="rmodal__daypkg' + (state.pkg === p.key && !out ? ' is-sel' : '') + (out ? ' is-out' : '') + urg + '"' +
+          (out ? ' disabled' : '') + ' data-pkgkey="' + esc(p.key) + '">' +
+          '<span class="rmodal__daypkg-name">' + esc(p.key) + '</span>' +
+          '<span class="rmodal__daypkg-price">' + money(PRICE[p.key]) + '</span>' +
+          '<span class="rmodal__daypkg-spots"><span class="cd__dot"></span>' + seat + '</span>' +
+        '</button>';
+      }).join('') + '</div>';
+    box.querySelectorAll('[data-pkgkey]').forEach(function (b) {
+      if (b.disabled) return;
+      b.addEventListener('click', function () {
+        var key = b.getAttribute('data-pkgkey');
+        var p = dep.packages.filter(function (x) { return x.key === key; })[0];
+        state.pkg = key; state.dateId = p.id; state.dateObj = p;
+        if (state.qty > p.spotsLeft) state.qty = p.spotsLeft; if (state.qty < 1) state.qty = 1;
+        drawPkgPanel(); renderCart();
+      });
+    });
+  }
+
+  /* ---- Paso 1: Boletos ---- */
   function renderTickets() {
     var t = STR[lang()];
     var max = state.dateObj ? state.dateObj.spotsLeft : 1;
@@ -366,15 +401,14 @@
         '<span class="rmodal__qty" id="rmodalQty">' + state.qty + '</span>' +
         '<button type="button" class="rmodal__pm" data-inc>+</button>' +
       '</div>' +
-      '<p class="rmodal__sub rmodal__sub--c">' + (state.dateObj ? (state.dateObj.spotsLeft + ' ' + t.spots_left) : '') + '</p>';
+      '<p class="rmodal__sub rmodal__sub--c">' + esc(state.pkg || '') + (state.dateObj ? ' · ' + state.dateObj.spotsLeft + ' ' + t.spots_left : '') + '</p>';
     elContent.querySelector('[data-dec]').addEventListener('click', function () { if (state.qty > 1) { state.qty--; document.getElementById('rmodalQty').textContent = state.qty; renderCart(); } });
     elContent.querySelector('[data-inc]').addEventListener('click', function () { if (state.qty < max) { state.qty++; document.getElementById('rmodalQty').textContent = state.qty; renderCart(); } });
   }
 
-  /* ---- Paso 3: Datos ---- */
+  /* ---- Paso 2: Datos ---- */
   function renderDetails() {
-    var t = STR[lang()], lg = lang();
-    var d = state.dietary;
+    var t = STR[lang()], lg = lang(), d = state.dietary;
     var pills = DIET_OPTS.map(function (o) {
       var on = d.restrictions.indexOf(o.v) > -1 ? ' is-sel' : '';
       return '<button type="button" class="rmodal__pill' + on + '" data-diet="' + esc(o.v) + '">' + esc(o[lg]) + '</button>';
@@ -399,7 +433,7 @@
     var box = elContent.querySelector('#rf_dietbox');
     elContent.querySelector('#rf_diet').addEventListener('change', function (e) {
       d.enabled = e.target.checked;
-      if (d.enabled) { box.classList.add('is-open'); }
+      if (d.enabled) box.classList.add('is-open');
       else { box.classList.remove('is-open'); d.restrictions = []; d.notes = ''; renderDetails(); }
     });
     elContent.querySelectorAll('[data-diet]').forEach(function (b) {
@@ -414,16 +448,17 @@
 
   /* ---- Navegación ---- */
   function showErr(msg) {
-    var box = elContent.querySelector('#rf_err') || elContent.querySelector('.rmodal__h');
-    if (elContent.querySelector('#rf_err')) { box.textContent = msg; box.hidden = false; }
-    else alert(msg);
+    var errEl = elContent.querySelector('#rf_err');
+    if (errEl) { errEl.textContent = msg; errEl.hidden = false; } else alert(msg);
   }
   function next() {
     var t = STR[lang()];
-    if (state.step === 0) { if (!state.pkg) return showErr(t.err_pkg); state.step = 1; return render(); }
-    if (state.step === 1) { if (!state.dateId) return showErr(t.err_date); state.step = 2; return render(); }
-    if (state.step === 2) { state.step = 3; return render(); }
-    if (state.step === 3) return submit();
+    if (state.step === 0) {
+      if (!state.dateId || !state.pkg || !state.dateObj || state.dateObj.spotsLeft <= 0) return showErr(t.err_datepkg);
+      state.step = 1; return render();
+    }
+    if (state.step === 1) { state.step = 2; return render(); }
+    if (state.step === 2) return submit();
   }
   function back() { if (state.step > 0) { state.step--; render(); } }
   btnNext.addEventListener('click', next);
@@ -442,7 +477,7 @@
         name: state.name.trim(), email: state.email.trim(), phone: state.phone.trim(),
         currency: state.currency,
         dietaryRestrictions: state.dietary.enabled ? state.dietary.restrictions : [],
-        dietaryNotes: state.dietary.enabled ? state.dietary.notes.trim() : '',
+        dietaryNotes: state.dietary.enabled ? state.dietary.notes.trim() : ''
       })
     })
       .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
@@ -453,11 +488,9 @@
       .catch(function () { showErr(t.pay_err); btnNext.disabled = false; btnNext.textContent = t.pay; });
   }
 
-  // Re-render al cambiar idioma
   new MutationObserver(function () { if (!modal.hidden) render(); })
     .observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
 
-  /* ---- Disparadores ---- */
   document.addEventListener('click', function (e) {
     var trigger = e.target.closest('.js-reserve');
     if (!trigger) return;
@@ -465,7 +498,6 @@
     open({ package: trigger.getAttribute('data-package') });
   });
 
-  // Config pública: tipos de cambio, IVA, modo prueba y montos de prueba por moneda.
   fetch(API + '/api/config')
     .then(function (r) { return r.json(); })
     .then(function (c) {

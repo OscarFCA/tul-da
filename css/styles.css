@@ -502,6 +502,22 @@ a { color: inherit; text-decoration: none; }
 .rmodal__callegend { max-width: 360px; margin: 14px auto 0; font-size: 11px; color: var(--text-mute); display: flex; align-items: center; justify-content: center; }
 .lg { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 6px; }
 .lg--open { background: var(--gold); } .lg--sold { background: var(--text-faint); }
+/* Panel de paquetes del día seleccionado (paso Fecha + Paquete) */
+.rmodal__daypkgs-wrap { margin-top: 18px; }
+.rmodal__daypkgs-hint { font-size: 13px; color: var(--text-faint); font-style: italic; text-align: center; padding: 14px 0; }
+.rmodal__daypkgs-h { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-mute); margin-bottom: 10px; }
+.rmodal__daypkgs { display: flex; gap: 8px; flex-wrap: wrap; }
+.rmodal__daypkg { flex: 1; min-width: 96px; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 12px 10px; background: rgba(255,255,255,.02); border: 1px solid var(--line-soft); border-radius: 4px; cursor: pointer; transition: border-color .2s, background .2s; }
+.rmodal__daypkg:hover:not(.is-out) { border-color: var(--line); }
+.rmodal__daypkg.is-sel { border-color: var(--gold); background: rgba(201,151,58,.1); }
+.rmodal__daypkg.is-out { opacity: .5; cursor: default; }
+.rmodal__daypkg-name { font-family: var(--font-display); font-size: 17px; color: #F4EEE0; }
+.rmodal__daypkg-price { font-family: var(--font-display); font-size: 16px; color: var(--gold); }
+.rmodal__daypkg-spots { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: var(--pale-gold); }
+.rmodal__daypkg-spots b { font-family: var(--font-display); font-size: 14px; }
+.rmodal__daypkg.is-low .rmodal__daypkg-spots { color: #E8A350; } .rmodal__daypkg.is-low .cd__dot { background: #E8A350; }
+.rmodal__daypkg.is-critical .rmodal__daypkg-spots { color: #E4756A; } .rmodal__daypkg.is-critical .cd__dot { background: #D65A4A; }
+.rmodal__daypkg.is-out .rmodal__daypkg-spots { color: var(--text-mute); } .rmodal__daypkg.is-out .cd__dot { display: none; }
 /* Stepper de boletos */
 .rmodal__stepper { display: flex; align-items: center; justify-content: center; gap: 26px; margin: 24px 0 8px; }
 .rmodal__pm { width: 50px; height: 50px; border-radius: 50%; border: 1px solid var(--line); background: none; color: var(--gold); font-size: 24px; cursor: pointer; transition: border-color .2s, background .2s; }
