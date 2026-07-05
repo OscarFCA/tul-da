@@ -63,6 +63,8 @@
     fechas_h2: 'When is <em>yours?</em>',
     dates_col_fecha: 'Date', dates_col_pkg: 'Packages', dates_col_spots: 'Spots',
     dates_spots: 'spots',
+    dates_loading: 'Loading dates…',
+    dates_testnote: 'Test mode · payment is $10&nbsp;MXN to validate the end-to-end flow.',
     dates_ask: "Don't see your date?",
     dates_btn: 'Write to us',
 

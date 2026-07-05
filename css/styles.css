@@ -264,6 +264,19 @@ a { color: inherit; text-decoration: none; }
 .dates__spots b { font-family: var(--font-display); font-size: 22px; color: var(--gold); }
 .dates__spots i { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-mute); font-style: normal; }
 .dates__spots--low b { color: var(--pale-gold); }
+/* --- Selector dinámico de fechas --- */
+.dates__body { min-height: 60px; }
+.dates__state { padding: 26px 0; font-size: 14px; color: var(--text-mute); }
+.dates__state--err { color: var(--pale-gold); }
+.dates__row--link { text-decoration: none; color: inherit; cursor: pointer; transition: border-color .25s ease, padding-left .25s ease; }
+.dates__row--link:hover { border-bottom-color: rgba(201,151,58,0.6); padding-left: 8px; }
+.dates__reserve { display: block; margin-top: 6px; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); opacity: 0; transition: opacity .25s ease; }
+.dates__row--link:hover .dates__reserve { opacity: 1; }
+.dates__last { display: block; margin-top: 6px; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--pale-gold); font-style: normal; }
+.dates__row--sold { opacity: .42; }
+.dates__spots--sold { font-size: 12px; letter-spacing: .16em; text-transform: uppercase; color: var(--text-mute); }
+.dates__testnote { margin-top: 22px; font-size: 12px; letter-spacing: .04em; color: var(--text-mute); font-style: italic; }
+@media (hover: none) { .dates__reserve { opacity: 1; } }
 .dates__cta { margin-top: 46px; display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
 .dates__ask { font-family: var(--font-display); font-style: italic; font-size: 20px; color: var(--text-soft); }
 

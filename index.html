@@ -301,28 +301,19 @@
   <div class="container container--narrow">
     <span class="eyebrow reveal" data-t="fechas_eyebrow">Próximas salidas</span>
     <h2 id="fechas-h" class="display reveal" data-t="fechas_h2">¿Cuándo es <em>el tuyo?</em></h2>
-    <div class="dates reveal">
+    <div class="dates reveal" id="datesLive"
+         data-api="https://tul-da-agent-production.up.railway.app"
+         data-test-link="https://buy.stripe.com/test_14AaEX0uu42f3cC2Eo1RC03">
       <div class="dates__head">
         <span data-t="dates_col_fecha">Fecha</span>
         <span data-t="dates_col_pkg">Paquetes</span>
         <span data-t="dates_col_spots">Lugares</span>
       </div>
-      <div class="dates__row">
-        <span class="dates__date">Jul 18 — 21</span>
-        <span class="dates__pkg">Classic · Premium · VIP</span>
-        <span class="dates__spots"><b>6</b> <i data-t="dates_spots">lugares</i></span>
-      </div>
-      <div class="dates__row">
-        <span class="dates__date">Ago 8 — 11</span>
-        <span class="dates__pkg">Premium · VIP</span>
-        <span class="dates__spots dates__spots--low"><b>3</b> <i data-t="dates_spots">lugares</i></span>
-      </div>
-      <div class="dates__row">
-        <span class="dates__date">Sep 5 — 8</span>
-        <span class="dates__pkg">Classic · Premium · VIP</span>
-        <span class="dates__spots"><b>8</b> <i data-t="dates_spots">lugares</i></span>
+      <div class="dates__body" id="datesBody">
+        <p class="dates__state" data-t="dates_loading">Cargando fechas…</p>
       </div>
     </div>
+    <p class="dates__testnote reveal" id="datesTestNote" hidden data-t="dates_testnote">Modo prueba · el pago es de $10&nbsp;MXN para validar el flujo end-to-end.</p>
     <div class="dates__cta reveal">
       <span class="dates__ask" data-t="dates_ask">¿No ves tu fecha?</span>
       <a class="btn" href="mailto:hola@tulda.mx?subject=Consulta%20de%20fechas%20Tul-D%C3%A1" data-t="dates_btn">Escríbenos</a>
@@ -370,5 +361,6 @@
 
 <script src="js/i18n.js" defer></script>
 <script src="js/main.js" defer></script>
+<script src="js/dates.js" defer></script>
 </body>
 </html>
