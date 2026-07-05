@@ -28,9 +28,10 @@
       spots_left: 'lugares', soldout: 'Agotado', no_dates: 'Sin fechas disponibles para este paquete por ahora.',
       tickets: '¿Cuántos boletos?', tickets_sub: 'Máximo según lugares disponibles.',
       your_data: 'Tus datos', name: 'Nombre completo', email: 'Correo electrónico', phone: 'WhatsApp / Teléfono',
-      summary: 'Resumen', pkg_l: 'Paquete', date_l: 'Fecha', qty_l: 'Boletos', total_l: 'Total',
+      summary: 'Resumen', cart_empty: 'Tu selección aparecerá aquí.', pkg_l: 'Paquete', date_l: 'Fecha', qty_l: 'Boletos', total_l: 'Total',
       back: 'Atrás', next: 'Continuar', pay: 'Ir a pagar',
       test: 'Modo prueba · usa la tarjeta 4242 4242 4242 4242 (no se cobra dinero real).',
+      test_price: 'Montos de prueba · $10 MXN por boleto.',
       err_pkg: 'Elige un paquete.', err_date: 'Elige una fecha disponible.',
       err_name: 'Escribe tu nombre.', err_email: 'Correo inválido.', err_phone: 'Escribe tu teléfono.',
       loading: 'Cargando fechas…', pay_err: 'No pudimos iniciar el pago. Intenta de nuevo.',
@@ -45,9 +46,10 @@
       spots_left: 'spots', soldout: 'Sold out', no_dates: 'No dates available for this package right now.',
       tickets: 'How many tickets?', tickets_sub: 'Max based on available spots.',
       your_data: 'Your details', name: 'Full name', email: 'Email', phone: 'WhatsApp / Phone',
-      summary: 'Summary', pkg_l: 'Package', date_l: 'Date', qty_l: 'Tickets', total_l: 'Total',
+      summary: 'Summary', cart_empty: 'Your selection will appear here.', pkg_l: 'Package', date_l: 'Date', qty_l: 'Tickets', total_l: 'Total',
       back: 'Back', next: 'Continue', pay: 'Proceed to payment',
       test: 'Test mode · use card 4242 4242 4242 4242 (no real charge).',
+      test_price: 'Test amounts · $10 MXN per ticket.',
       err_pkg: 'Choose a package.', err_date: 'Choose an available date.',
       err_name: 'Enter your name.', err_email: 'Invalid email.', err_phone: 'Enter your phone.',
       loading: 'Loading dates…', pay_err: "We couldn't start the payment. Please try again.",
@@ -64,9 +66,11 @@
   function money(n) {
     return new Intl.NumberFormat(STR[lang()].locale, { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(n);
   }
+  // Precio por boleto: en modo prueba (testUnit en centavos) todos valen lo mismo.
+  function unitPrice(key) { return state.testUnit != null ? state.testUnit / 100 : PRICE[key]; }
 
   /* ---- Estado ---- */
-  var state = { step: 0, pkg: null, dateId: null, dateObj: null, qty: 1, name: '', email: '', phone: '', cal: null };
+  var state = { step: 0, pkg: null, dateId: null, dateObj: null, qty: 1, name: '', email: '', phone: '', cal: null, testUnit: null };
   var availCache = {}; // pkg → array de fechas
   var availByIso = {}; // 'YYYY-MM-DD' → {id, spotsLeft, status}
 
@@ -77,13 +81,13 @@
       '<button class="rmodal__x" type="button" data-close aria-label="Cerrar">&times;</button>' +
       '<header class="rmodal__head"><h3 id="rmodalTitle" class="rmodal__title"></h3>' +
         '<ol class="rmodal__steps"></ol></header>' +
-      '<div class="rmodal__content"></div>' +
-      '<footer class="rmodal__foot">' +
-        '<div class="rmodal__cart"></div>' +
-        '<div class="rmodal__actions">' +
-          '<button class="rmodal__btn rmodal__btn--ghost" type="button" data-back></button>' +
-          '<button class="rmodal__btn rmodal__btn--gold" type="button" data-next></button>' +
-        '</div>' +
+      '<div class="rmodal__body">' +
+        '<div class="rmodal__main"><div class="rmodal__content"></div></div>' +
+        '<aside class="rmodal__aside"><div class="rmodal__cart"></div></aside>' +
+      '</div>' +
+      '<footer class="rmodal__actions">' +
+        '<button class="rmodal__btn rmodal__btn--ghost" type="button" data-back></button>' +
+        '<button class="rmodal__btn rmodal__btn--gold" type="button" data-next></button>' +
       '</footer>' +
     '</div>';
 
@@ -156,14 +160,20 @@
 
   function renderCart() {
     var t = STR[lang()];
-    if (!state.pkg) { elCart.innerHTML = ''; return; }
-    var total = state.pkg ? PRICE[state.pkg] * state.qty : 0;
+    var head = '<div class="rmodal__carthead">' + esc(t.summary) + '</div>';
+    if (!state.pkg) {
+      elCart.innerHTML = head + '<p class="rmodal__cartempty">' + esc(t.cart_empty) + '</p>';
+      return;
+    }
+    var total = unitPrice(state.pkg) * state.qty;
     var dateTxt = state.dateObj ? fmtDate(state.dateObj.date) : '—';
-    elCart.innerHTML =
-      '<div class="rmodal__cartrow"><span>' + esc(t.pkg_l) + '</span><b>' + esc(state.pkg || '—') + '</b></div>' +
+    var note = state.testUnit != null ? '<p class="rmodal__cartnote">' + esc(t.test_price) + '</p>' : '';
+    elCart.innerHTML = head +
+      '<div class="rmodal__cartrow"><span>' + esc(t.pkg_l) + '</span><b>' + esc(state.pkg) + '</b></div>' +
       '<div class="rmodal__cartrow"><span>' + esc(t.date_l) + '</span><b>' + esc(dateTxt) + '</b></div>' +
       '<div class="rmodal__cartrow"><span>' + esc(t.qty_l) + '</span><b>' + state.qty + '</b></div>' +
-      '<div class="rmodal__cartrow rmodal__cartrow--total"><span>' + esc(t.total_l) + '</span><b>' + money(total) + '</b></div>';
+      '<div class="rmodal__cartrow rmodal__cartrow--total"><span>' + esc(t.total_l) + '</span><b>' + money(total) + '</b></div>' +
+      note;
   }
 
   /* ---- Paso 0: Paquetes ---- */
@@ -175,7 +185,7 @@
         var on = state.pkg === p.key ? ' is-sel' : '';
         return '<button type="button" class="rmodal__pkg' + on + '" data-pkg="' + p.key + '">' +
           '<span class="rmodal__pkgname">' + esc(p.key) + '</span>' +
-          '<span class="rmodal__pkgprice">' + money(p.price) + '</span>' +
+          '<span class="rmodal__pkgprice">' + money(unitPrice(p.key)) + '</span>' +
           '<span class="rmodal__pkgper">' + esc(t.per) + '</span>' +
           '<span class="rmodal__pkgtag">' + esc(p.tag[lg]) + '</span>' +
         '</button>';
@@ -346,6 +356,12 @@
     e.preventDefault();
     open({ package: trigger.getAttribute('data-package') });
   });
+
+  // Config pública (modo prueba de montos). Si aplica, actualiza precios mostrados.
+  fetch(API + '/api/config')
+    .then(function (r) { return r.json(); })
+    .then(function (c) { if (c && c.testUnitAmount != null) { state.testUnit = c.testUnitAmount; if (!modal.hidden) render(); } })
+    .catch(function () {});
 
   window.TuldaReserve = { open: open };
 })();
