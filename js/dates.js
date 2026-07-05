@@ -81,12 +81,11 @@
       var low = dt.status === 'low_availability';
       var spotsCls = 'dates__spots' + (low ? ' dates__spots--low' : '');
       var lastTag = low ? '<span class="dates__last">' + esc(t.last) + '</span>' : '';
-      // La reserva lleva el contexto de fecha/paquete en la URL (para trazabilidad).
-      var href = TEST_LINK +
-        (TEST_LINK.indexOf('?') > -1 ? '&' : '?') +
-        'client_reference_id=' + encodeURIComponent(dt.id);
+      var pkgName = (dt.packageNames && dt.packageNames[0]) || '';
+      // Abre el modal de reserva con esta fecha (y su paquete) preseleccionados.
       return '' +
-        '<a class="dates__row dates__row--link" href="' + href + '">' +
+        '<a class="dates__row dates__row--link" href="#reservar"' +
+          ' data-date-id="' + esc(dt.id) + '" data-package="' + esc(pkgName) + '">' +
           '<span class="dates__date">' + dateStr + lastTag + '</span>' +
           '<span class="dates__pkg">' + esc(pkg) + '</span>' +
           '<span class="' + spotsCls + '">' +
@@ -108,6 +107,19 @@
         body.innerHTML = '<p class="dates__state dates__state--err">' + esc(STR[lang()].error) + '</p>';
       });
   }
+
+  // Click en una fecha → abre el modal de reserva con fecha + paquete.
+  body.addEventListener('click', function (e) {
+    var row = e.target.closest('[data-date-id]');
+    if (!row) return;
+    e.preventDefault();
+    if (window.TuldaReserve) {
+      window.TuldaReserve.open({
+        package: row.getAttribute('data-package'),
+        dateId: row.getAttribute('data-date-id')
+      });
+    }
+  });
 
   // Re-render al cambiar el idioma (el i18n cambia html[lang]).
   new MutationObserver(function () { render(); })

@@ -104,7 +104,7 @@
         <span class="lang-toggle__sep">/</span>
         <span class="lang-toggle__opt" data-lang="en">EN</span>
       </button>
-      <a href="#fechas" class="nav-cta" data-t="nav_cta">Reserva tu lugar</a>
+      <a href="#fechas" class="nav-cta js-reserve" data-t="nav_cta">Reserva tu lugar</a>
       <button class="nav__toggle" id="navToggle" aria-label="Abrir menú" aria-expanded="false" aria-controls="navDrawer">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M4 8h16M4 16h16"/></svg>
       </button>
@@ -138,7 +138,7 @@
     <span class="eyebrow eyebrow--gold" data-t="hero_eyebrow">Mérida&nbsp;&nbsp;→&nbsp;&nbsp;Tulum</span>
     <h1 class="display" data-t="hero_h1">Curado para quienes<br>lo viven <em>todo.</em></h1>
     <p class="hero__sub" data-t="hero_sub">Curated Experiences. Good People. Unforgettable Memories.</p>
-    <a href="#paquetes" class="btn" data-t="hero_cta">Elige tu experiencia</a>
+    <a href="#paquetes" class="btn js-reserve" data-t="hero_cta">Elige tu experiencia</a>
   </div>
   <div class="hero__cue" aria-hidden="true"><span></span></div>
 </header>
@@ -198,7 +198,7 @@
           </ul>
           <div class="pkg__foot">
             <p class="pkg__inc" data-t="pkg_inc_basic">Transporte redondo Mérida → Tulum · Transporte para actividades · Entrada a eventos seleccionados · Hospedaje personalizado</p>
-            <a class="btn btn--block" href="https://buy.stripe.com/test_aFacN5cdc1U78wWen61RC00" data-t="pkg_cta">Reservar lugar</a>
+            <a class="btn btn--block js-reserve" data-package="Classic" href="#fechas" data-t="pkg_cta">Reservar lugar</a>
           </div>
         </div>
       </article>
@@ -225,7 +225,7 @@
           </ul>
           <div class="pkg__foot">
             <p class="pkg__inc" data-t="pkg_inc_basic">Transporte redondo Mérida → Tulum · Transporte para actividades · Entrada a eventos seleccionados · Hospedaje personalizado</p>
-            <a class="btn btn--block" href="https://buy.stripe.com/test_fZu6oH2CC1U75kKgve1RC01" data-t="pkg_cta">Reservar lugar</a>
+            <a class="btn btn--block js-reserve" data-package="Premium" href="#fechas" data-t="pkg_cta">Reservar lugar</a>
           </div>
         </div>
       </article>
@@ -253,7 +253,7 @@
           </ul>
           <div class="pkg__foot">
             <p class="pkg__inc" data-t="pkg_inc_vip">Transporte redondo Mérida → Tulum · Transporte para actividades · Entrada a eventos seleccionados · Hospedaje Luxury o Alojamiento Completo</p>
-            <a class="btn btn--block" href="https://buy.stripe.com/test_dRm14n9100Q39B0en61RC02" data-t="pkg_cta">Reservar lugar</a>
+            <a class="btn btn--block js-reserve" data-package="VIP" href="#fechas" data-t="pkg_cta">Reservar lugar</a>
           </div>
         </div>
       </article>
@@ -359,8 +359,12 @@
   </div>
 </footer>
 
+<!-- Modal de reserva (carrito) — se construye en js/reservation.js -->
+<div class="rmodal" id="reserveModal" data-api="https://tul-da-agent-production.up.railway.app" hidden></div>
+
 <script src="js/i18n.js" defer></script>
 <script src="js/main.js" defer></script>
+<script src="js/reservation.js" defer></script>
 <script src="js/dates.js" defer></script>
 </body>
 </html>
