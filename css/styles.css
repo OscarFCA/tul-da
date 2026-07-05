@@ -409,8 +409,9 @@ a { color: inherit; text-decoration: none; }
 .rmodal__field input:focus { outline: none; border-color: var(--gold); }
 .rmodal__err { color: #E4A0A0; font-size: 13px; margin: 0; }
 .rmodal__test { font-size: 12px; color: var(--text-mute); font-style: italic; margin: 4px 0 0; }
-/* Aside / resumen (carrito) */
-.rmodal__aside { min-width: 0; border-left: 1px solid var(--line-soft); background: rgba(0,0,0,.22); padding: 24px 22px; overflow-y: auto; }
+/* Aside / resumen (carrito) + acciones a la derecha */
+.rmodal__aside { min-width: 0; border-left: 1px solid var(--line-soft); background: rgba(0,0,0,.22); padding: 24px 22px; overflow-y: auto; display: flex; flex-direction: column; }
+.rmodal__cart { flex-shrink: 0; }
 .rmodal__carthead { font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--text-mute); padding-bottom: 12px; border-bottom: 1px solid var(--line-soft); margin-bottom: 4px; }
 .rmodal__cartempty { font-size: 13px; color: var(--text-faint); font-style: italic; margin: 14px 0 0; }
 .rmodal__cartrow { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 11px 0; font-size: 13px; color: var(--text-mute); border-bottom: 1px solid var(--line-soft); }
@@ -418,27 +419,28 @@ a { color: inherit; text-decoration: none; }
 .rmodal__cartrow--total { border-bottom: none; margin-top: 6px; padding-top: 14px; }
 .rmodal__cartrow--total b { font-family: var(--font-display); font-size: 24px; color: var(--gold); }
 .rmodal__cartnote { margin: 14px 0 0; font-size: 11px; color: var(--text-mute); font-style: italic; line-height: 1.5; }
-/* Footer de acciones (ancho completo) */
-.rmodal__actions { flex-shrink: 0; display: flex; gap: 12px; align-items: center; padding: 16px 30px; border-top: 1px solid var(--line-soft); background: rgba(0,0,0,.2); }
-.rmodal__btn { padding: 13px 28px; border-radius: 2px; font-family: var(--font-body); font-size: 12px; letter-spacing: .16em; text-transform: uppercase; cursor: pointer; transition: all .2s; border: 1px solid var(--gold); }
-.rmodal__btn--ghost { background: none; color: var(--text-soft); border-color: var(--line); }
-.rmodal__btn--ghost:hover { border-color: var(--gold); color: var(--gold); }
-.rmodal__btn--gold { background: var(--gold); color: var(--obsidian); font-weight: 600; margin-left: auto; }
+/* Acciones dentro del panel derecho (siempre visibles) */
+.rmodal__actions { margin-top: auto; display: flex; flex-direction: column; gap: 10px; padding-top: 18px; }
+.rmodal__btn { padding: 14px 28px; border-radius: 2px; font-family: var(--font-body); font-size: 12px; letter-spacing: .16em; text-transform: uppercase; cursor: pointer; transition: all .2s; border: 1px solid var(--gold); }
+.rmodal__btn--gold { width: 100%; background: var(--gold); color: var(--obsidian); font-weight: 600; }
 .rmodal__btn--gold:hover { background: var(--pale-gold); }
 .rmodal__btn[disabled] { opacity: .6; cursor: default; }
+.rmodal__btnback { background: none; border: none; color: var(--text-mute); font-family: var(--font-body); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; cursor: pointer; padding: 6px; transition: color .2s; }
+.rmodal__btnback:hover { color: var(--gold); }
 /* Tablet: resumen más angosto */
 @media (max-width: 820px) {
-  .rmodal__body { grid-template-columns: 1fr 220px; }
+  .rmodal__body { grid-template-columns: 1fr 210px; }
 }
-/* Móvil: una columna, resumen bajo el wizard, panel a pantalla completa */
+/* Móvil: una columna, resumen + acción fija abajo, panel a pantalla completa */
 @media (max-width: 680px) {
   .rmodal { padding: 0; }
   .rmodal__panel { width: 100%; height: 100%; max-height: 100%; border: none; border-radius: 0; }
-  .rmodal__body { grid-template-columns: 1fr; }
+  .rmodal__body { grid-template-columns: 1fr; overflow-y: auto; }
+  .rmodal__main { min-height: auto; }
   .rmodal__content { overflow-y: visible; }
-  .rmodal__body { overflow-y: auto; }
-  .rmodal__aside { border-left: none; border-top: 1px solid var(--line-soft); }
-  .rmodal__head, .rmodal__content, .rmodal__actions, .rmodal__aside { padding-left: 20px; padding-right: 20px; }
+  .rmodal__aside { border-left: none; border-top: 1px solid var(--line-soft); overflow: visible; }
+  .rmodal__actions { position: sticky; bottom: 0; margin-top: 16px; padding: 14px 0; background: var(--deep-night); }
+  .rmodal__head, .rmodal__content, .rmodal__aside { padding-left: 20px; padding-right: 20px; }
   .rmodal__pkgs { grid-template-columns: 1fr; }
   .rmodal__pkg { flex-direction: row; align-items: baseline; flex-wrap: wrap; gap: 4px 12px; }
   .rmodal__pkgtag { width: 100%; margin-top: 2px; }

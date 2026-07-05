@@ -83,12 +83,14 @@
         '<ol class="rmodal__steps"></ol></header>' +
       '<div class="rmodal__body">' +
         '<div class="rmodal__main"><div class="rmodal__content"></div></div>' +
-        '<aside class="rmodal__aside"><div class="rmodal__cart"></div></aside>' +
+        '<aside class="rmodal__aside">' +
+          '<div class="rmodal__cart"></div>' +
+          '<div class="rmodal__actions">' +
+            '<button class="rmodal__btn rmodal__btn--gold" type="button" data-next></button>' +
+            '<button class="rmodal__btnback" type="button" data-back></button>' +
+          '</div>' +
+        '</aside>' +
       '</div>' +
-      '<footer class="rmodal__actions">' +
-        '<button class="rmodal__btn rmodal__btn--ghost" type="button" data-back></button>' +
-        '<button class="rmodal__btn rmodal__btn--gold" type="button" data-next></button>' +
-      '</footer>' +
     '</div>';
 
   var elContent = modal.querySelector('.rmodal__content');
