@@ -1,0 +1,37 @@
+name: Deploy a HostGator (tul-da.com)
+
+# Cada push a main publica el sitio en el hosting de HostGator vía FTP.
+# También se puede lanzar manualmente desde la pestaña Actions.
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-hostgator
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Subir por FTP a HostGator
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USER }}
+          password: ${{ secrets.FTP_PASS }}
+          port: ${{ secrets.FTP_PORT }}
+          protocol: ftp
+          server-dir: ${{ secrets.FTP_TARGET_DIR }}
+          # Solo sincroniza los archivos del sitio; la acción no borra nada
+          # que no gestione ella misma.
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/.github/**
+            **/README.md
+            **/.DS_Store
