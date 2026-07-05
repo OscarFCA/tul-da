@@ -334,9 +334,12 @@
       var dep = depByIso[iso];
       if (dep && dep.status !== 'sold_out') {
         var sel = state.dateIso === iso ? ' is-sel' : '';
-        var low = dep.status === 'low_availability' ? ' rmodal__day--low' : '';
+        // Badge = lugares del paquete SELECCIONADO ese día (no la suma de todos).
+        var selP = state.pkg ? dep.packages.filter(function (p) { return p.key === state.pkg; })[0] : null;
+        var badge = selP ? selP.spotsLeft : dep.total;
+        var low = badge <= 5 ? ' rmodal__day--low' : '';
         cells += '<button type="button" class="rmodal__day rmodal__day--open' + low + sel + '" data-iso="' + iso + '">' +
-          d + '<i>' + dep.total + '</i></button>';
+          d + '<i>' + badge + '</i></button>';
       } else if (dep && dep.status === 'sold_out') {
         cells += '<span class="rmodal__day rmodal__day--sold">' + d + '</span>';
       } else if (contMap[iso]) {
@@ -394,7 +397,7 @@
         var p = dep.packages.filter(function (x) { return x.key === key; })[0];
         state.pkg = key; state.dateId = p.id; state.dateObj = p;
         if (state.qty > p.spotsLeft) state.qty = p.spotsLeft; if (state.qty < 1) state.qty = 1;
-        drawPkgPanel(); renderCart();
+        drawPkgPanel(); drawCalendar(); renderCart(); // el badge del calendario sigue al paquete
       });
     });
   }
