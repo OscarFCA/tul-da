@@ -133,18 +133,24 @@
     if (opts.package && PRICE[opts.package]) state.pkg = opts.package; // paquete preferido
     modal.hidden = false;
     document.body.style.overflow = 'hidden';
-    ensureAllAvail().then(function () {
+    function proceed() {
       if (opts.dateId) {
-        // buscar el registro y preseleccionar día + paquete
         Object.keys(depByIso).some(function (iso) {
           var p = depByIso[iso].packages.filter(function (x) { return x.id === opts.dateId; })[0];
-          if (p) { state.dateIso = iso; pickPackageForDay(iso, p.key); return true; }
+          if (p) { pickPackageForDay(iso, p.key); return true; } // preselecciona día + paquete
           return false;
         });
       }
       render();
-    });
-    render(); // pinta el estado de carga mientras llega la disponibilidad
+    }
+    // Si ya hay disponibilidad, render final directo (sin parpadeo). Si no, un
+    // "Cargando…" limpio hasta que esté todo listo (nunca un estado intermedio).
+    if (allLoaded) { proceed(); return; }
+    var t = STR[lang()];
+    elTitle.textContent = t.title; elSteps.innerHTML = '';
+    elContent.innerHTML = '<h4 class="rmodal__h">' + esc(t.pick_datepkg) + '</h4><p class="rmodal__state">' + esc(t.loading) + '</p>';
+    elCart.innerHTML = ''; btnBack.style.visibility = 'hidden'; btnNext.textContent = t.next;
+    ensureAllAvail().then(proceed);
   }
   function close() { modal.hidden = true; document.body.style.overflow = ''; }
   modal.addEventListener('click', function (e) { if (e.target.hasAttribute('data-close')) close(); });
@@ -289,8 +295,13 @@
   }
 
   function monthRange() {
-    var isos = Object.keys(depByIso).sort();
+    var isos = [];
+    Object.keys(depByIso).forEach(function (iso) {
+      isos.push(iso);
+      if (depByIso[iso].endDate) isos.push(depByIso[iso].endDate); // incluir meses del rango (agosto)
+    });
     if (!isos.length) return null;
+    isos.sort();
     function ym(iso) { var p = iso.split('-'); return { y: +p[0], m: +p[1] - 1 }; }
     return { min: ym(isos[0]), max: ym(isos[isos.length - 1]) };
   }
