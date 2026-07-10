@@ -158,6 +158,33 @@
   /* ─── Botón quemar ───────────── */
   .burn-zone { padding: 0 24px 28px; }
 
+  .burn-label {
+    font-size: 9px;
+    letter-spacing: .2em;
+    color: var(--ritual-gold);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .burn-input {
+    width: 100%;
+    background: #0d0d0d;
+    border: 1px solid #C9973A44;
+    border-radius: 2px;
+    color: var(--pale-gold);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 14px;
+    font-weight: 300;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+    outline: none;
+    transition: border-color .2s;
+    letter-spacing: .05em;
+  }
+  .burn-input:focus { border-color: var(--ritual-gold); }
+  .burn-input::placeholder { color: #444; }
+  .burn-input.error { border-color: #cf6f6f; }
+
   .btn-burn {
     width: 100%;
     background: var(--ritual-gold);
@@ -278,6 +305,8 @@
       '<div class="divider"><span class="divider__star">✦</span></div>' +
       dietHtml +
       '<div class="burn-zone">' +
+        '<div class="burn-label">Clave de operación</div>' +
+        '<input class="burn-input" id="burnSecret" type="password" placeholder="••••••" autocomplete="off">' +
         '<button class="btn-burn" id="btnBurn">Quemar boleto</button>' +
       '</div>';
 
@@ -311,9 +340,21 @@
 
   function burn(reservationId) {
     var btn = document.getElementById('btnBurn');
+    var input = document.getElementById('burnSecret');
+    var secret = input ? input.value : '';
+
+    if (!secret.trim()) {
+      if (input) { input.classList.add('error'); input.focus(); }
+      return;
+    }
+    if (input) input.classList.remove('error');
     if (btn) { btn.disabled = true; btn.textContent = 'Procesando…'; }
 
-    fetch(API + '/api/entrada/' + encodeURIComponent(reservationId) + '/burn', { method: 'POST' })
+    fetch(API + '/api/entrada/' + encodeURIComponent(reservationId) + '/burn', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ secret: secret }),
+    })
       .then(function (r) { return r.json().then(function(d){ return {ok: r.ok, data: d}; }); })
       .then(function (res) {
         if (res.ok) {
@@ -322,7 +363,11 @@
           renderBurned(null);
         } else {
           if (btn) { btn.disabled = false; btn.textContent = 'Quemar boleto'; }
-          alert(res.data && res.data.error ? res.data.error : 'Error al quemar el boleto.');
+          var errMsg = res.data && res.data.error ? res.data.error : 'Error al quemar el boleto.';
+          if (errMsg.includes('Clave')) {
+            if (input) { input.classList.add('error'); input.value = ''; input.focus(); }
+          }
+          alert(errMsg);
         }
       })
       .catch(function () {
