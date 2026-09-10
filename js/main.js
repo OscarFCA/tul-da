@@ -46,6 +46,37 @@
     reveals.forEach(function (el) { io.observe(el); });
   }
 
+  /* ---- Tarjeta dual Cenote / Laguna ----
+     Gira sola entre las dos sedes; al hacer clic en uno de los dos nombres
+     el usuario elige y el giro automático se detiene. */
+  document.querySelectorAll('.exp--dual').forEach(function (card) {
+    var timer = null, chosen = false;
+
+    function setFace(showB) {
+      card.classList.toggle('is-face-b', showB);
+      card.querySelectorAll('[data-face]').forEach(function (btn) {
+        btn.setAttribute('aria-pressed', String((btn.getAttribute('data-face') === 'b') === showB));
+      });
+    }
+    function stop() { if (timer) { clearInterval(timer); timer = null; } }
+    function start() {
+      if (reduce || chosen || timer) return;
+      timer = setInterval(function () { setFace(!card.classList.contains('is-face-b')); }, 5500);
+    }
+
+    card.addEventListener('click', function (e) {
+      var btn = e.target.closest('[data-face]');
+      if (!btn) return;
+      chosen = true;
+      stop();
+      setFace(btn.getAttribute('data-face') === 'b');
+    });
+    card.addEventListener('mouseenter', stop);
+    card.addEventListener('mouseleave', start);
+
+    start();
+  });
+
   /* ---- Parallax sutil de la luna ---- */
   var moon = document.querySelector('[data-parallax]');
   if (moon && !reduce) {

@@ -43,6 +43,8 @@
     exp_bar: 'Bar Hopping',
     exp_villa: 'Villa Party',
     exp_cenote: 'Cenote / Lagoon',
+    exp_cenote_a: 'Cenote',
+    exp_cenote_b: 'Lagoon',
     exp_cenote_note: 'Subject to availability',
     exp_tour: 'Tour of your choice',
     exp_sound: 'Sound Healing',
